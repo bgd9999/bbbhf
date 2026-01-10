@@ -17,7 +17,7 @@ export default function Login() {
   const [loginError, setLoginError] = useState("");
   const [signupError, setSignupError] = useState("");
   const [referralError, setReferralError] = useState("");
-  const [isSignUpActive, setIsSignUpActive] = useState(true);
+  const [isSignUpActive, setIsSignUpActive] = useState(false); // Changed to false for login as default
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingReferral, setIsCheckingReferral] = useState(false);
   const [referralValid, setReferralValid] = useState(false);
@@ -378,8 +378,86 @@ export default function Login() {
             </div>
 
             <div className="p-4 md:p-6 lg:p-8">
-              {/* Sign Up Form */}
-              {isSignUpActive ? (
+              {/* Login Form (Now shown first by default) */}
+              {!isSignUpActive ? (
+                <form onSubmit={handleLoginSubmit}>
+                  {/* Username Input */}
+                  <div className="mb-4">
+                    <label htmlFor="loginUsername" className="block text-xs md:text-sm text-gray-300 mb-2">Username</label>
+                    <input
+                      type="text"
+                      id="loginUsername"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full p-2 md:p-3 text-sm font-[300] bg-[#1a1a1a] border border-gray-700 text-white rounded-lg focus:outline-none focus:border-green-500 hover:border-gray-600 transition-colors"
+                      placeholder="Enter your username"
+                      disabled={isLoading}
+                    />
+                  </div>
+
+                  {/* Password Input */}
+                  <div className="mb-4 md:mb-6">
+                    <label htmlFor="loginPassword" className="block text-xs md:text-sm text-gray-300 mb-2">Password</label>
+                    <input
+                      type="password"
+                      id="loginPassword"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full p-2 md:p-3 text-sm font-[300] bg-[#1a1a1a] border border-gray-700 text-white rounded-lg focus:outline-none focus:border-green-500 hover:border-gray-600 transition-colors"
+                      placeholder="Enter your password"
+                      disabled={isLoading}
+                    />
+                    {loginError && <p className="text-red-400 text-xs mt-1">{loginError}</p>}
+                  </div>
+
+                  {/* Remember me and Forgot password */}
+                  <div className="flex justify-between items-center mb-6">
+                    <label className="flex items-center text-xs md:text-sm text-gray-300 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="form-checkbox h-4 w-4 text-green-500 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-offset-gray-900" 
+                        disabled={isLoading}
+                      />
+                      <span className="ml-2">Remember me</span>
+                    </label>
+                    <NavLink to="/forgot-password" className="text-xs md:text-sm text-green-400 hover:text-green-300 hover:underline transition-colors">
+                      Forgot password?
+                    </NavLink>
+                  </div>
+
+                  {/* Login Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-emerald-600 cursor-pointer text-white text-sm font-[500] rounded-lg shadow-lg transition-all transform hover:scale-[1.02] hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Logging in...
+                      </span>
+                    ) : 'Log in'}
+                  </button>
+
+                  {/* Additional Links */}
+                  <div className="mt-4 text-center">
+                    <p className="text-gray-400 text-xs">
+                      Don't have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setIsSignUpActive(true)}
+                        className="text-green-400 hover:text-green-300 font-medium hover:underline transition-colors"
+                      >
+                        Sign up here
+                      </button>
+                    </p>
+                  </div>
+                </form>
+              ) : (
+                /* Sign Up Form (Now shown when tab is clicked) */
                 <form onSubmit={handleSignUpSubmit}>
                   {/* Phone Number Input */}
                   <div className="mb-4">
@@ -536,84 +614,6 @@ export default function Login() {
                   </button>
 
                   {signupError && <p className="text-red-400 text-xs mt-3 text-center">{signupError}</p>}
-                </form>
-              ) : (
-                /* Login Form */
-                <form onSubmit={handleLoginSubmit}>
-                  {/* Username Input */}
-                  <div className="mb-4">
-                    <label htmlFor="loginUsername" className="block text-xs md:text-sm text-gray-300 mb-2">Username</label>
-                    <input
-                      type="text"
-                      id="loginUsername"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full p-2 md:p-3 text-sm font-[300] bg-[#1a1a1a] border border-gray-700 text-white rounded-lg focus:outline-none focus:border-green-500 hover:border-gray-600 transition-colors"
-                      placeholder="Enter your username"
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  {/* Password Input */}
-                  <div className="mb-4 md:mb-6">
-                    <label htmlFor="loginPassword" className="block text-xs md:text-sm text-gray-300 mb-2">Password</label>
-                    <input
-                      type="password"
-                      id="loginPassword"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full p-2 md:p-3 text-sm font-[300] bg-[#1a1a1a] border border-gray-700 text-white rounded-lg focus:outline-none focus:border-green-500 hover:border-gray-600 transition-colors"
-                      placeholder="Enter your password"
-                      disabled={isLoading}
-                    />
-                    {loginError && <p className="text-red-400 text-xs mt-1">{loginError}</p>}
-                  </div>
-
-                  {/* Remember me and Forgot password */}
-                  <div className="flex justify-between items-center mb-6">
-                    <label className="flex items-center text-xs md:text-sm text-gray-300 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="form-checkbox h-4 w-4 text-green-500 bg-gray-800 border-gray-600 rounded focus:ring-green-500 focus:ring-offset-gray-900" 
-                        disabled={isLoading}
-                      />
-                      <span className="ml-2">Remember me</span>
-                    </label>
-                    <NavLink to="/forgot-password" className="text-xs md:text-sm text-green-400 hover:text-green-300 hover:underline transition-colors">
-                      Forgot password?
-                    </NavLink>
-                  </div>
-
-                  {/* Login Button */}
-                  <button
-                    type="submit"
-                    className="w-full py-3 md:py-4 bg-gradient-to-r from-green-600 to-emerald-600 cursor-pointer text-white text-sm font-[500] rounded-lg shadow-lg transition-all transform hover:scale-[1.02] hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Logging in...
-                      </span>
-                    ) : 'Log in'}
-                  </button>
-
-                  {/* Additional Links */}
-                  <div className="mt-4 text-center">
-                    <p className="text-gray-400 text-xs">
-                      Don't have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => setIsSignUpActive(true)}
-                        className="text-green-400 hover:text-green-300 font-medium hover:underline transition-colors"
-                      >
-                        Sign up here
-                      </button>
-                    </p>
-                  </div>
                 </form>
               )}
             </div>
