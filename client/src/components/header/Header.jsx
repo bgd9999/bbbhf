@@ -650,16 +650,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
               {/* Desktop View */}
          <div className="hidden md:flex items-center rounded overflow-hidden gap-2">
       <div className="bg-box_bg rounded-[5px] h-10 border-[1px] border-gray-800 flex items-center">
-        <div className="flex items-center space-x-1 px-3 py-2 text-sm bg-[#1f1f1f] text-white border-r border-gray-800">
-          <img
-            src="https://img.b112j.com/bj/h5/assets/v3/images/icon-set/currency-type/vp.png?v=1755600713311&source=drccdnsrc"
-            className="w-4 h-4"
-            alt="VIP"
-          />
-          <span className="min-w-[60px]">
-            {showBalance ? (userData?.vip_points || "0.00") : "******"}
-          </span>
-        </div>
+    
         <div className="flex items-center space-x-1 px-3 py-2 text-sm bg-[#1f1f1f] text-white">
           <img
             src="https://img.b112j.com/bj/h5/assets/v3/images/icon-set/currency-type/bdt.png?v=1755600713311&source=drccdnsrc"
