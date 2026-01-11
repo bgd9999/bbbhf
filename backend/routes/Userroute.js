@@ -1343,7 +1343,11 @@ Userrouter.get("/all-transactions", authenticateToken, async (req, res) => {
   });
 // Route to handle game callback data
 // Route to handle game callback data
-Userrouter.post("/callback-data-game", async (req, res) => {
+router.post("/callback-data-game", async (req, res) => {
+  console.log("=== CALLBACK-DATA-GAME REQUEST START ===");
+  console.log("Request received at:", new Date().toISOString());
+  console.log("Request headers:", req.headers);
+  
   try {
     // Extract fields from request body (support both old and new formats)
     let {
@@ -1356,10 +1360,41 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       verification_key,
       bet_type,
       transaction_id,
-      times
+      times,
+      // Old format fields
+      member_account,
+      game_uid,
+      serial_number,
+      currency_code,
+      platform,
+      game_type,
+      device_info,
+      bet_amount,
+      win_amount
     } = req.body;
 
-    console.log("Callback data received -> ", req.body);
+    console.log("📥 Raw callback data received:", JSON.stringify(req.body, null, 2));
+    console.log("🔍 Extracted fields:");
+    console.log("  - New format:");
+    console.log("    account_id:", account_id);
+    console.log("    username:", username);
+    console.log("    provider_code:", provider_code);
+    console.log("    amount:", amount);
+    console.log("    game_code:", game_code);
+    console.log("    verification_key:", verification_key);
+    console.log("    bet_type:", bet_type);
+    console.log("    transaction_id:", transaction_id);
+    console.log("    times:", times);
+    console.log("  - Old format:");
+    console.log("    member_account:", member_account);
+    console.log("    game_uid:", game_uid);
+    console.log("    serial_number:", serial_number);
+    console.log("    currency_code:", currency_code);
+    console.log("    platform:", platform);
+    console.log("    game_type:", game_type);
+    console.log("    device_info:", device_info);
+    console.log("    bet_amount:", bet_amount);
+    console.log("    win_amount:", win_amount);
 
     // Determine the format and process accordingly
     let processingFormat = 'old';
@@ -1368,22 +1403,43 @@ Userrouter.post("/callback-data-game", async (req, res) => {
     // Check for new format indicators
     if ((username || account_id) && provider_code && game_code && bet_type) {
       processingFormat = 'new';
+      console.log("🎯 Detected NEW format data");
       
       // Validate required fields for new format
       if (!username || !provider_code || !amount || !game_code || !bet_type) {
+        console.error("❌ Missing required fields for new format");
         return res.status(400).json({
           success: false,
           message: "Required fields missing for new format.",
+          missing_fields: {
+            username: !username,
+            provider_code: !provider_code,
+            amount: !amount,
+            game_code: !game_code,
+            bet_type: !bet_type
+          }
         });
       }
 
       // Process username
+      console.log("👤 Original username:", username);
       if (username) {
         username = username.substring(0, 45);
         username = username.substring(0, username.length - 2);
+        console.log("👤 Processed username:", username);
       }
-     const findgame=await Game.findOne({gameApiID:game_code});
-     console.log("game",findgame)
+     
+     // Find the game by gameApiID
+     console.log(`🎮 Looking for game with gameApiID: ${game_code}`);
+     const findgame = await Game.findOne({ gameApiID: game_code });
+     console.log("🎮 Game found:", findgame ? `${findgame.name} (${findgame._id})` : "NOT FOUND");
+     
+     // If game not found, use a fallback name
+     const gameName = findgame ? findgame.name : `${provider_code}_${game_code}`;
+     if (!findgame) {
+         console.warn(`⚠️ Game not found in database with gameApiID: ${game_code}. Using fallback name: ${gameName}`);
+     }
+
       // Map new format to unified structure
       processedData = {
         member_account: username,
@@ -1395,28 +1451,39 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         currency_code: 'BDT',
         platform: 'casino',
         game_type: provider_code,
-        device_info:'web',
+        device_info: 'web',
         bet_type: bet_type,
         provider_code: provider_code,
         verification_key: verification_key,
         times: times,
-        game_name:findgame.name
+        game_name: gameName
       };
+
+      console.log("🔄 Processed NEW format data:", JSON.stringify(processedData, null, 2));
 
     } else {
       // Process old format
       processingFormat = 'old';
+      console.log("🎯 Detected OLD format data");
       
       // Validate required fields for old format
       if (!member_account || !game_uid || !serial_number || !currency_code) {
+        console.error("❌ Missing required fields for old format");
         return res.status(400).json({
           success: false,
           message: "All required data are not provided for old format.",
+          missing_fields: {
+            member_account: !member_account,
+            game_uid: !game_uid,
+            serial_number: !serial_number,
+            currency_code: !currency_code
+          }
         });
       }
 
       // Ensure currency_code is BDT
       if (currency_code !== "BDT") {
+        console.error(`❌ Invalid currency code: ${currency_code}. Must be BDT`);
         return res.status(400).json({
           success: false,
           message: "Currency code must be BDT.",
@@ -1424,6 +1491,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       }
 
       // Process member_account
+      console.log("👤 Original member_account:", member_account);
       if (member_account) {
         member_account = member_account.substring(0, 45);
       }
@@ -1432,10 +1500,12 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         0,
         member_account.length - 2
       );
+      console.log("👤 Processed original username:", originalusername);
 
       // Calculate amounts
       const betAmount = parseFloat(bet_amount) || 0;
       const winAmount = parseFloat(win_amount) || 0;
+      console.log(`💰 Amounts - Bet: ${betAmount}, Win: ${winAmount}`);
 
       processedData = {
         member_account: member_account,
@@ -1446,43 +1516,61 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         game_uid: game_uid,
         serial_number: serial_number,
         currency_code: currency_code,
-        platform: platform,
-        game_type: game_type,
-        device_info: device_info,
+        platform: platform || 'web',
+        game_type: game_type || 'unknown',
+        device_info: device_info || 'web',
         bet_type: 'AUTO', // Old format auto-determines bet/settle
-        provider_code: game_type,
+        provider_code: game_type || 'unknown',
         status: winAmount > 0 ? 'won' : 'lost'
       };
+
+      console.log("🔄 Processed OLD format data:", JSON.stringify(processedData, null, 2));
     }
 
-    console.log(`Processing ${processingFormat} format data:`, processedData);
+    console.log(`📊 Processing ${processingFormat.toUpperCase()} format data`);
 
     // Check if serial number already exists in BettingHistory
+    console.log(`🔍 Checking for duplicate transaction with serial_number: ${processedData.serial_number}`);
     const existingBet = await BettingHistory.findOne({ 
       serial_number: processedData.serial_number 
     });
     
     if (existingBet) {
+      console.error(`❌ Duplicate transaction found: ${processedData.serial_number}`);
+      console.log("📋 Existing bet details:", {
+        id: existingBet._id,
+        created: existingBet.createdAt,
+        amount: existingBet.bet_amount,
+        status: existingBet.status
+      });
       return res.status(409).json({
         success: false,
         message: "Duplicate transaction - serial number already exists.",
+        existing_transaction_id: existingBet._id
       });
     }
+    console.log("✅ No duplicate transaction found");
 
     // Find the user by username
+    console.log(`👤 Looking for user with username: ${processedData.original_username}`);
     const matchedUser = await User.findOne({ 
       username: processedData.original_username 
     });
     
     if (!matchedUser) {
+      console.error(`❌ User not found: ${processedData.original_username}`);
       return res.status(404).json({
         success: false,
         message: "User not found!",
+        username: processedData.original_username
       });
     }
+    console.log(`✅ User found: ${matchedUser.username} (ID: ${matchedUser._id})`);
+    console.log("📊 User current balance:", matchedUser.balance);
 
     // Calculate amounts and status based on format
     let betAmount, winAmount, netAmount, isWin, status;
+    console.log(`📈 Calculating amounts for ${processingFormat} format...`);
 
     if (processingFormat === 'new') {
       betAmount = processedData.bet_type === 'BET' ? processedData.bet_amount : 0;
@@ -1490,17 +1578,33 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       netAmount = winAmount - betAmount;
       isWin = processedData.bet_type === 'SETTLE';
       status = isWin ? 'won' : 'lost';
+      console.log(`🔄 New format calculation:`);
+      console.log(`   Bet Type: ${processedData.bet_type}`);
+      console.log(`   Bet Amount: ${betAmount}`);
+      console.log(`   Win Amount: ${winAmount}`);
+      console.log(`   Net Amount: ${netAmount}`);
+      console.log(`   Is Win: ${isWin}`);
     } else {
       betAmount = processedData.bet_amount;
       winAmount = processedData.win_amount;
       netAmount = processedData.net_amount;
       isWin = winAmount > 0;
       status = processedData.status;
+      console.log(`🔄 Old format calculation:`);
+      console.log(`   Bet Amount: ${betAmount}`);
+      console.log(`   Win Amount: ${winAmount}`);
+      console.log(`   Net Amount: ${netAmount}`);
+      console.log(`   Is Win: ${isWin}`);
     }
 
     // Calculate new balance
     const balanceBefore = matchedUser.balance || 0;
     const newBalance = balanceBefore - betAmount + winAmount;
+    console.log(`💰 Balance calculation:`);
+    console.log(`   Before: ${balanceBefore}`);
+    console.log(`   Bet: -${betAmount}`);
+    console.log(`   Win: +${winAmount}`);
+    console.log(`   After: ${newBalance}`);
 
     // Prepare the bet history record for User model
     const betRecord = {
@@ -1511,10 +1615,13 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       bet_time: new Date(),
       status: "completed",
       provider_code: processedData.provider_code,
-      bet_type: processedData.bet_type
+      bet_type: processedData.bet_type,
+      game_name: processedData.game_name
     };
+    console.log("📝 Bet record prepared:", betRecord);
 
     // Update user data
+    console.log(`🔄 Updating user ${matchedUser._id}...`);
     const updateResult = await User.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(matchedUser._id) },
       {
@@ -1537,8 +1644,8 @@ Userrouter.post("/callback-data-game", async (req, res) => {
             balanceBefore: balanceBefore,
             balanceAfter: newBalance,
             description: isWin
-              ? `Won ${winAmount} in game ${processedData.game_uid}`
-              : `Bet ${betAmount} in game ${processedData.game_uid}`,
+              ? `Won ${winAmount} in game ${processedData.game_uid} (${processedData.game_name})`
+              : `Bet ${betAmount} in game ${processedData.game_uid} (${processedData.game_name})`,
             referenceId: processedData.serial_number,
             createdAt: new Date(),
           },
@@ -1546,17 +1653,28 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       },
       { returnDocument: "after" }
     );
-       matchedUser.total_bet+=betAmount;
-       matchedUser.save();
+    
+    // Also update total_bet directly (as in original code)
+    matchedUser.total_bet += betAmount;
+    await matchedUser.save();
+    
     // Check if update was successful
     if (!updateResult) {
+      console.error(`❌ Failed to update user ${matchedUser._id}`);
       return res.status(500).json({
         success: false,
         message: "Failed to update user data.",
       });
     }
+    console.log("✅ User updated successfully");
+    console.log("📊 Updated user stats:");
+    console.log(`   Balance: ${updateResult.balance}`);
+    console.log(`   Total Bet: ${updateResult.total_bet}`);
+    console.log(`   Total Wins: ${updateResult.total_wins}`);
+    console.log(`   Total Loss: ${updateResult.total_loss}`);
 
     // Create BettingHistory record
+    console.log("📝 Creating BettingHistory record...");
     const bettingHistoryRecord = new BettingHistory({
       member_account: processedData.member_account,
       original_username: processedData.original_username,
@@ -1565,6 +1683,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       win_amount: winAmount,
       net_amount: netAmount,
       game_uid: processedData.game_uid,
+      game_name: processedData.game_name,
       serial_number: processedData.serial_number,
       currency_code: processedData.currency_code,
       status: status,
@@ -1582,16 +1701,25 @@ Userrouter.post("/callback-data-game", async (req, res) => {
 
     // Save BettingHistory record
     await bettingHistoryRecord.save();
+    console.log(`✅ BettingHistory record created: ${bettingHistoryRecord._id}`);
 
     // Apply bet to wagering (for bonus requirements)
+    console.log("🎰 Applying bet to wagering requirements...");
     await updateResult.applyBetToWagering(betAmount);
+    console.log("✅ Wagering requirements updated");
 
     // ========== AFFILIATE COMMISSION LOGIC ==========
+    console.log("👥 Starting affiliate commission processing...");
     let affiliateCommissionProcessed = false;
     let commissionDetails = null;
 
     // Check if user has an affiliate code and process commission (only when user loses)
     if (matchedUser.registrationSource?.affiliateCode && !isWin && betAmount > 0) {
+        console.log(`💰 Eligible for affiliate commission:`);
+        console.log(`   - User has affiliate code: ${matchedUser.registrationSource.affiliateCode}`);
+        console.log(`   - User lost: ${!isWin}`);
+        console.log(`   - Bet amount: ${betAmount}`);
+        
         try {
             // Find master affiliate
             const masterAffiliate = await MasterAffiliate.findOne({ 
@@ -1600,6 +1728,9 @@ Userrouter.post("/callback-data-game", async (req, res) => {
             });
             
             if (masterAffiliate) {
+                console.log(`✅ Master affiliate found: ${masterAffiliate.masterCode} (ID: ${masterAffiliate._id})`);
+                console.log(`   Commission rate: ${masterAffiliate.commissionRate}%`);
+                
                 // Find super affiliate
                 const superAffiliate = await Affiliate.findOne({ 
                     _id: masterAffiliate.createdBy,
@@ -1607,21 +1738,29 @@ Userrouter.post("/callback-data-game", async (req, res) => {
                 });
                 
                 if (superAffiliate) {
-                  console.log(masterAffiliate.commissionRate)
+                    console.log(`✅ Super affiliate found: ${superAffiliate.affiliateCode} (ID: ${superAffiliate._id})`);
+                    console.log(`   Commission rate: ${superAffiliate.commissionRate}%`);
+                    
                     // Calculate commissions
-                    const superAffiliateCommission = (betAmount / 100) *superAffiliate.commissionRate;
+                    const superAffiliateCommission = (betAmount / 100) * superAffiliate.commissionRate;
                     const masterAffiliateCommission = (superAffiliateCommission / 100 ) * masterAffiliate.commissionRate;
 
-                    console.log(`Commission Calculation - Bet: ${betAmount}, Super Rate: ${superAffiliate.commissionRate}%, Super Commission: ${superAffiliateCommission}, Master Rate: ${masterAffiliate.commissionRate}%, Master Commission: ${masterAffiliateCommission}`);
+                    console.log(`💰 Commission Calculation:`);
+                    console.log(`   Bet Amount: ${betAmount}`);
+                    console.log(`   Super Affiliate Rate: ${superAffiliate.commissionRate}%`);
+                    console.log(`   Super Commission: ${superAffiliateCommission}`);
+                    console.log(`   Master Affiliate Rate: ${masterAffiliate.commissionRate}%`);
+                    console.log(`   Master Commission: ${masterAffiliateCommission}`);
 
                     // Update super affiliate earnings
+                    console.log(`🔄 Updating super affiliate earnings...`);
                     const superAffiliateEarning = await superAffiliate.addBetCommission(
                         matchedUser._id,
                         bettingHistoryRecord._id,
                         betAmount,
                         superAffiliate.commissionRate,
                         superAffiliateCommission,
-                        `Bet commission from user ${processedData.original_username} - Game: ${processedData.game_uid}`,
+                        `Bet commission from user ${processedData.original_username} - Game: ${processedData.game_uid} (${processedData.game_name})`,
                         {
                             betType: 'loss',
                             gameType: processedData.game_type,
@@ -1629,20 +1768,27 @@ Userrouter.post("/callback-data-game", async (req, res) => {
                             masterAffiliateCode: masterAffiliate.masterCode
                         }
                     );
-                    masterAffiliate.total_earning+=masterAffiliateCommission;
+                    console.log(`✅ Super affiliate earnings updated: ${superAffiliateEarning._id}`);
+                    
+                    // Update master affiliate total earnings
+                    masterAffiliate.total_earning += masterAffiliateCommission;
+                    
                     // Update master affiliate earnings with override commission
+                    console.log(`🔄 Updating master affiliate override commission...`);
                     await masterAffiliate.addOverrideCommission(
                         masterAffiliateCommission, // amount
                         superAffiliate._id, // sourceAffiliate
                         'bet_commission', // sourceType
                         superAffiliateCommission, // sourceAmount
                         masterAffiliate.commissionRate, // overrideRate
-                        `Override commission from super affiliate ${superAffiliate.affiliateCode} - User ${processedData.original_username} bet loss in ${processedData.game_uid}`, // description
+                        `Override commission from super affiliate ${superAffiliate.affiliateCode} - User ${processedData.original_username} bet loss in ${processedData.game_uid} (${processedData.game_name})`, // description
                         {
                             subAffiliateEarningId: superAffiliateEarning._id,
-                            notes: `Commission from user ${processedData.original_username} bet loss - Bet ID: ${bettingHistoryRecord._id}, Bet Amount: ${betAmount}`
+                            notes: `Commission from user ${processedData.original_username} bet loss - Bet ID: ${bettingHistoryRecord._id}, Bet Amount: ${betAmount}, Game: ${processedData.game_name}`
                         }
                     );
+                    await masterAffiliate.save();
+                    console.log(`✅ Master affiliate earnings updated`);
 
                     // Refresh master affiliate data to get updated earnings
                     const updatedMasterAffiliate = await MasterAffiliate.findById(masterAffiliate._id);
@@ -1666,7 +1812,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
                             paidEarnings: updatedMasterAffiliate.masterEarnings.paidEarnings
                         }
                     };
-                    masterAffiliate.save();
+                    
                     console.log(`✅ Affiliate commissions processed successfully`);
                     console.log(`   - Super Affiliate: ${superAffiliateCommission} BDT`);
                     console.log(`   - Master Affiliate: ${masterAffiliateCommission} BDT`);
@@ -1679,16 +1825,21 @@ Userrouter.post("/callback-data-game", async (req, res) => {
             }
         } catch (error) {
             console.error("❌ Error processing affiliate commission:", error);
+            console.error("Stack trace:", error.stack);
             // Don't fail the entire transaction if commission processing fails
             affiliateCommissionProcessed = false;
             commissionDetails = { error: error.message };
         }
     } else {
-        console.log(`ℹ️  No affiliate commission - User: ${isWin ? 'won' : 'lost'}, Bet: ${betAmount}, Affiliate Code: ${matchedUser.registrationSource?.affiliateCode || 'none'}`);
+        console.log(`ℹ️  No affiliate commission:`);
+        console.log(`   - User ${isWin ? 'won' : 'lost'}`);
+        console.log(`   - Bet amount: ${betAmount}`);
+        console.log(`   - Affiliate Code: ${matchedUser.registrationSource?.affiliateCode || 'none'}`);
     }
     // ========== END AFFILIATE COMMISSION LOGIC ==========
 
     // Send success response
+    console.log("📤 Sending success response...");
     const responseData = {
       success: true,
       data: {
@@ -1697,12 +1848,14 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         win_amount: winAmount,
         bet_amount: betAmount,
         game_uid: processedData.game_uid,
+        game_name: processedData.game_name,
         serial_number: processedData.serial_number,
         gameRecordId: updateResult.betHistory[updateResult.betHistory.length - 1]?._id,
         bettingHistoryId: bettingHistoryRecord._id,
         processing_format: processingFormat,
         affiliateCommissionProcessed: affiliateCommissionProcessed,
-        commissionDetails: commissionDetails
+        commissionDetails: commissionDetails,
+        timestamp: new Date().toISOString()
       },
     };
 
@@ -1712,16 +1865,40 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       responseData.data.provider_code = processedData.provider_code;
     }
 
+    console.log("✅ Callback processed successfully");
+    console.log("📊 Response data:", JSON.stringify(responseData, null, 2));
+    console.log("=== CALLBACK-DATA-GAME REQUEST END ===");
+    
     res.json(responseData);
 
   } catch (error) {
-    console.error("❌ Error in callback-data-game:", error);
+    console.error("❌❌❌ ERROR in callback-data-game:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Request body at error:", req.body);
+    console.error("=== CALLBACK-DATA-GAME REQUEST END WITH ERROR ===");
     
     // Handle duplicate key error specifically
     if (error.code === 11000 && error.keyPattern && error.keyPattern.serial_number) {
+      console.error("Duplicate key error - serial_number already exists");
       return res.status(409).json({
         success: false,
         message: "Duplicate transaction - serial number already exists.",
+        error_code: "DUPLICATE_TRANSACTION"
+      });
+    }
+
+    // Handle specific MongoDB errors
+    if (error.name === 'MongoError') {
+      console.error("MongoDB Error:", error.message);
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      console.error("Validation Error:", error.message);
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        error: error.message
       });
     }
 
@@ -1729,6 +1906,8 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       success: false,
       message: "Server error",
       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+      error_code: "INTERNAL_SERVER_ERROR",
+      timestamp: new Date().toISOString()
     });
   }
 });
