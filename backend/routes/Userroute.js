@@ -1383,6 +1383,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         username = username.substring(0, username.length - 2);
       }
      const findgame=await Game.findOne({gameApiID:game_code});
+     console.log("game",findgame)
       // Map new format to unified structure
       processedData = {
         member_account: username,
@@ -1399,7 +1400,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         provider_code: provider_code,
         verification_key: verification_key,
         times: times,
-        game_name:"test game"
+        game_name:findgame.name
       };
 
     } else {
