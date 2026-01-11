@@ -331,9 +331,9 @@ const CategoryContent = () => {
       console.log("Menu games API response:", response.data);
       
       let gamesData = [];
-      
-      if (response.data && response.data.data) {
-        setExclusiveGames(response.data.data);
+       console.log(response.data)
+      if (response.data) {
+        setExclusiveGames(response.data);
       setProviders([]);
       } 
       
@@ -486,7 +486,7 @@ const CategoryContent = () => {
       );
     }
 
-    if (providers.length === 0 && exclusiveGames.length === 0) {
+    if (providers.length === 0 && exclusiveGames?.length === 0) {
       return (
         <div className="p-4 text-center text-[13px] text-white">
           No content found for this category.
