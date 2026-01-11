@@ -333,28 +333,10 @@ const CategoryContent = () => {
       let gamesData = [];
       
       if (response.data && response.data.data) {
-        gamesData = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        gamesData = response.data;
-      }
-      
-      // Try different possible category name variations
-      const exclusiveGamesData = gamesData.filter(game => {
-        if (!game) return false;
-        
-        const categoryName = (game.categoryname || game.category || game.categoryName || '').toLowerCase();
-        const gameName = (game.name || game.gameName || '').toLowerCase();
-        
-        // Check for exclusive category or exclusive in game name
-        return categoryName.includes("exclusive") || 
-               categoryName.includes("exlusive") ||
-               gameName.includes("exclusive") ||
-               gameName.includes("exlusive");
-      });
-      
-      console.log("Filtered exclusive games:", exclusiveGamesData);
-      setExclusiveGames(exclusiveGamesData);
+        setExclusiveGames(response.data.data);
       setProviders([]);
+      } 
+      
     } catch (error) {
       console.error("Error fetching exclusive games:", error);
       setExclusiveGames([]);
