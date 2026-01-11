@@ -1399,7 +1399,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         provider_code: provider_code,
         verification_key: verification_key,
         times: times,
-        game_name:"no name"
+        game_name:findgame?.name || "no game"
       };
 
     } else {
