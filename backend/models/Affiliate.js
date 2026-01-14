@@ -56,7 +56,6 @@ const affiliateSchema = new mongoose.Schema({
   },
   promoMethod: {
     type: String,
-    enum: ['website', 'social_media', 'youtube', 'blog', 'email_marketing', 'other'],
     required: true
   },
   socialMediaProfiles: {
@@ -90,7 +89,6 @@ const affiliateSchema = new mongoose.Schema({
   },
   commissionType: {
     type: String,
-    enum: ['revenue_share', 'cpa', 'hybrid'],
     default: 'revenue_share'
   },
   cpaRate: {
@@ -128,7 +126,6 @@ const affiliateSchema = new mongoose.Schema({
     },
     type: {
       type: String,
-      enum: ['deposit_commission', 'bet_commission', 'withdrawal_commission', 'registration_bonus', 'cpa', 'other'],
       required: true
     },
     description: {
