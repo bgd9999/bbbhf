@@ -150,7 +150,6 @@ const affiliateSchema = new mongoose.Schema({
     },
     sourceType: {
       type: String,
-      enum: ['deposit', 'bet', 'withdrawal', 'registration', 'other'],
       required: true
     },
     
