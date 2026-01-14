@@ -2897,46 +2897,6 @@ Adminrouter.put("/deposits/:id/status", async (req, res) => {
       await user.save();
     }
 
-    // If status is being reverted from approved, deduct the balance
-    if (oldStatus === "completed" && status !== "completed") {
-      const user = await User.findById(deposit.userId._id);
-
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Check if user has sufficient balance
-      if (user.balance < deposit.amount) {
-        return res.status(400).json({
-          error: "User has insufficient balance to reverse this deposit",
-        });
-      }
-
-      // Deduct the balance
-      user.balance -= deposit.amount;
-
-      // Update deposit history status
-      const depositEntry = user.depositHistory.find(
-        (d) => d.transactionId === deposit.transactionId
-      );
-
-      if (depositEntry) {
-        depositEntry.status = status;
-      }
-
-      // Add transaction history for reversal
-      user.transactionHistory.push({
-        type: "adjustment",
-        amount: -deposit.amount,
-        balanceBefore: user.balance + deposit.amount,
-        balanceAfter: user.balance,
-        description: `Deposit reversal - Status changed to ${status}`,
-        referenceId: deposit._id.toString(),
-      });
-
-      await user.save();
-    }
-
     await deposit.save();
 
     res.json({
