@@ -24,6 +24,79 @@ const adminAuth = (req, res, next) => {
   }
   next();
 };
+
+// ==================== WITHDRAWAL COUNTS ROUTE ====================
+
+// GET withdrawal counts for dashboard/sidebar
+Adminrouter.get("/withdrawals/counts", async (req, res) => {
+  try {
+    const pendingCount = await Withdrawal.countDocuments({ status: "pending" });
+    const processingCount = await Withdrawal.countDocuments({ status: "processing" });
+    const completedCount = await Withdrawal.countDocuments({ status: "completed" });
+    const failedCount = await Withdrawal.countDocuments({ status: "failed" });
+    const cancelledCount = await Withdrawal.countDocuments({ status: "cancelled" });
+    
+    // Also get total for history
+    const totalCount = await Withdrawal.countDocuments();
+
+    res.json({
+      success: true,
+      counts: {
+        pending: pendingCount,
+        processing: processingCount,
+        completed: completedCount,
+        failed: failedCount,
+        cancelled: cancelledCount,
+        history: totalCount,
+        // For sidebar display:
+        approved: completedCount, // Usually "approved" means completed
+        rejected: failedCount + cancelledCount
+      },
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    console.error("Error fetching withdrawal counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch withdrawal counts",
+      error: error.message,
+    });
+  }
+});
+
+// GET deposit counts for dashboard/sidebar
+Adminrouter.get("/deposits/counts", async (req, res) => {
+  try {
+    const pendingCount = await Deposit.countDocuments({ status: "pending" });
+    const approvedCount = await Deposit.countDocuments({ status: "approved" });
+    const rejectedCount = await Deposit.countDocuments({ status: "rejected" });
+    const completedCount = await Deposit.countDocuments({ status: "completed" });
+    const cancelledCount = await Deposit.countDocuments({ status: "cancelled" });
+    
+    // Also get total for history
+    const totalCount = await Deposit.countDocuments();
+
+    res.json({
+      success: true,
+      counts: {
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        completed: completedCount,
+        cancelled: cancelledCount,
+        history: totalCount,
+      },
+      timestamp: new Date(),
+    });
+  } catch (error) {
+    console.error("Error fetching deposit counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch deposit counts",
+      error: error.message,
+    });
+  }
+});
 // Get user information
 Adminrouter.get("/admin-information", adminAuth, async (req, res) => {
   try {
@@ -2289,7 +2362,6 @@ const uploadGameImages = multer({
 });
 
 // ==================== GAME ROUTES ====================
-
 // GET all games with filtering and pagination
 Adminrouter.get("/games", async (req, res) => {
   try {
@@ -2396,16 +2468,15 @@ Adminrouter.post(
   ]),
   async (req, res) => {
     try {
-      const { name, provider, featured, status, gameApiID } = req.body;
-
+      const { name, provider, featured, status, gameApiID, category, fullScreen } = req.body;
+      console.log(req.body)
+      
       const gameProviderFont = await GameProvider.findOne({ name: provider });
       if (!gameProviderFont) {
         return res.status(400).json({ error: "Game provider font not found" });
       }
 
-      let category = gameProviderFont.category;
-
-      console.log(name, provider, category, featured, status, gameApiID);
+      console.log(name, provider, category, featured, status, gameApiID, fullScreen);
 
       // Validation
       if (!name || !provider || !category || !gameApiID) {
@@ -2418,23 +2489,16 @@ Adminrouter.post(
           .json({ error: "Both portrait and landscape images are required" });
       }
 
-      // Check if gameId already exists
-      // const existingGame = await Game.findOne({ gameId });
-      // if (existingGame) {
-      //   return res.status(400).json({ error: "Game ID already exists" });
-      // }
-
       const gameData = {
         name,
-        gameId:
-          Math.random().toString(36).substring(2, 15) +
-          Math.random().toString(36).substring(2, 15),
+        gameId:gameApiID,
         provider,
         category,
         portraitImage: `/uploads/games/portrait/${req.files.portraitImage[0].filename}`,
         landscapeImage: `/uploads/games/landscape/${req.files.landscapeImage[0].filename}`,
         featured: featured === "true" || featured === true,
         status: status !== undefined ? status : true,
+        fullScreen: fullScreen === "true" || fullScreen === true,
         gameApiID,
       };
 
@@ -2470,6 +2534,7 @@ Adminrouter.put(
       if (!game) {
         return res.status(404).json({ error: "Game not found" });
       }
+      console.log("df",req.body)
 
       // Update fields
       if (req.body.name) game.name = req.body.name;
@@ -2488,6 +2553,7 @@ Adminrouter.put(
       if (req.body.category) game.category = req.body.category;
       if (req.body.featured !== undefined) game.featured = req.body.featured;
       if (req.body.status !== undefined) game.status = req.body.status;
+      if (req.body.fullScreen !== undefined) game.fullScreen = req.body.fullScreen;
 
       // Handle portrait image update
       if (req.files && req.files.portraitImage) {
@@ -2538,7 +2604,6 @@ Adminrouter.put(
     }
   }
 );
-
 // PUT update game status
 Adminrouter.put("/games/:id/status", async (req, res) => {
   try {
@@ -2612,6 +2677,7 @@ Adminrouter.delete("/games/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete game" });
   }
 });
+
 
 // GET game categories for dropdown
 Adminrouter.get("/games/categories/list", async (req, res) => {

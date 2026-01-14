@@ -343,8 +343,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-white opacity-80">Referrals</p>
-                    <p className="text-3xl font-bold text-white mt-1">{dashboardStats.referralCount.toLocaleString()}</p>
-                    <p className="text-xs text-white opacity-70 mt-2">{dashboardStats.activeReferrals || 0} active</p>
+                    <p className="text-3xl font-bold text-white mt-1">{dashboardStats.activeReferrals.toLocaleString()}</p>
                   </div>
                   <div className="p-3 bg-purple-300 rounded-full">
                     <FaUsers className="text-2xl text-purple-800" />

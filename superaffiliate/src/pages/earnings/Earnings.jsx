@@ -467,35 +467,17 @@ const Earnings = () => {
             </div>
 
             {/* Performance Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-[5px] p-6 border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Referrals</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {earningsData.referralCount}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Active: {earningsData.activeReferrals}
+                     {earningsData.activeReferrals}
                     </p>
                   </div>
                   <div className="p-3 bg-indigo-100 rounded-xl">
                     <FaUsers className="text-indigo-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {earningsData.conversionRate.toFixed(2)}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Click to registration</p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-xl">
-                    <FaUserPlus className="text-orange-600 text-xl" />
                   </div>
                 </div>
               </div>

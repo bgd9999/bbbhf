@@ -2,65 +2,100 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   FiChevronRight, 
-  FiHome, 
-  FiDollarSign, 
-  FiUsers, 
+  FiHome,
+  FiUsers,
   FiSettings,
-  FiPieChart,
   FiBell,
-  FiShield,
   FiActivity,
   FiTrendingUp,
-  FiAward,
-  FiUserCheck,
   FiBarChart2,
-  FiDatabase,
   FiLayers,
   FiCreditCard,
-  FiBook,
   FiCalendar,
-  FiList,
   FiBox,
   FiMessageSquare,
-  FiSliders,
   FiLogIn,
-  FiServer,
-  FiGlobe,
   FiFileText,
-  FiBookOpen,
   FiShare2,
-  FiGift,
-  FiRotateCw
+  FiGift
 } from 'react-icons/fi';
-import { 
-  MdSportsScore, 
-  MdCasino, 
-  MdLiveTv,
-  MdSecurity,
-  MdOutlinePayments,
-} from 'react-icons/md';
-import { RiCoinsLine, RiCouponLine, RiRefund2Line } from 'react-icons/ri';
-import { TbTournament } from 'react-icons/tb';
+import { RiCoinsLine, RiRefund2Line } from 'react-icons/ri';
 import { useNavigate } from "react-router-dom";
+import axios from 'axios';
+
+// Environment variable for base URL
+const base_url = import.meta.env.VITE_API_KEY_Base_URL;
 
 const Sidebar = ({ isOpen }) => {
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState(null);
-  const [notifications, setNotifications] = useState(5); // Example notification count
+  const [notifications, setNotifications] = useState(5);
   const navigate = useNavigate();
   
+  // State for withdrawal counts
+  const [withdrawalCounts, setWithdrawalCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    history: 0
+  });
+
+  // State for deposit counts
+  const [depositCounts, setDepositCounts] = useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    history: 0
+  });
+
   const logout = () => {
     localStorage.removeItem("admin");
     localStorage.removeItem("admintoken");
     navigate("/login");
   };
 
+  // Fetch counts on component mount and when location changes
   useEffect(() => {
-    // Set active menu based on current path
-    // IMPORTANT: Order matters! More specific paths should come before general ones
+    const fetchCounts = async () => {
+      try {
+        // Fetch withdrawal counts
+        const withdrawalResponse = await axios.get(`${base_url}/api/admin/withdrawals/counts`);
+        if (withdrawalResponse.data.success) {
+          setWithdrawalCounts({
+            pending: withdrawalResponse.data.counts.pending,
+            approved: withdrawalResponse.data.counts.approved,
+            rejected: withdrawalResponse.data.counts.rejected,
+            history: withdrawalResponse.data.counts.history
+          });
+        }
+
+        // Fetch deposit counts
+        const depositResponse = await axios.get(`${base_url}/api/admin/deposits/counts`);
+        if (depositResponse.data.success) {
+          setDepositCounts({
+            pending: depositResponse.data.counts.pending,
+            approved: depositResponse.data.counts.approved,
+            rejected: depositResponse.data.counts.rejected,
+            history: depositResponse.data.counts.history
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching counts:', error);
+      }
+    };
+
+    fetchCounts();
+    
+    // Refresh counts every 30 seconds
+    const intervalId = setInterval(fetchCounts, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, [location]);
+
+  // Set active menu based on current path
+  useEffect(() => {
     const path = location.pathname;
     
-    // Check for specific paths first (most specific to least specific)
     if (path.startsWith('/deposit-bonus')) setOpenMenu('depositBonus');
     else if (path.startsWith('/turnover')) setOpenMenu('turnover');
     else if (path.startsWith('/dashboard/sports')) setOpenMenu('sports');
@@ -72,7 +107,7 @@ const Sidebar = ({ isOpen }) => {
     else if (path.startsWith('/dashboard/security')) setOpenMenu('security');
     else if (path.startsWith('/dashboard/reports')) setOpenMenu('reports');
     else if (path.startsWith('/withdraw')) setOpenMenu('withdraw');
-    else if (path.startsWith('/deposit')) setOpenMenu('deposit'); // This comes after deposit-bonus
+    else if (path.startsWith('/deposit')) setOpenMenu('deposit');
     else if (path.startsWith('/bet-logs')) setOpenMenu('betLogs');
     else if (path.startsWith('/games-management')) setOpenMenu('games');
     else if (path.startsWith('/notifications')) setOpenMenu('notifications');
@@ -85,10 +120,28 @@ const Sidebar = ({ isOpen }) => {
     else if (path.startsWith('/social-address')) setOpenMenu('social');
     else if (path.startsWith('/notice-management')) setOpenMenu('notice');
     else if (path.startsWith('/opay')) setOpenMenu('opay');
+    else setOpenMenu(null);
   }, [location]);
 
   const handleToggle = (menu) => {
     setOpenMenu(prev => (prev === menu ? null : menu));
+  };
+
+  // Function to format count (show +99 if more than 99)
+  const formatCount = (count) => {
+    if (count > 99) return '99+';
+    return count;
+  };
+
+  // Function to render count badge
+  const CountBadge = ({ count }) => {
+    if (!count || count === 0) return null;
+    
+    return (
+      <span className="ml-auto bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+        {formatCount(count)}
+      </span>
+    );
   };
 
   return (
@@ -112,7 +165,7 @@ const Sidebar = ({ isOpen }) => {
           <FiBell className="text-xl text-orange-200 hover:text-orange-400 transition-colors duration-200" />
           {notifications > 0 && (
             <span className="absolute -top-2 -right-2 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {notifications}
+              {formatCount(notifications)}
             </span>
           )}
         </div>
@@ -177,10 +230,26 @@ const Sidebar = ({ isOpen }) => {
           icon: <RiCoinsLine className="text-[18px]" />,
           key: 'deposit',
           links: [
-            { to: '/deposit/pending', text: 'Pending Deposits' },
-            { to: '/deposit/approved', text: 'Approved Deposits' },
-            { to: '/deposit/rejected', text: 'Rejected Deposits' },
-            { to: '/deposit/history', text: 'Deposit History' },
+            { 
+              to: '/deposit/pending', 
+              text: 'Pending Deposits',
+              count: depositCounts.pending
+            },
+            { 
+              to: '/deposit/approved', 
+              text: 'Approved Deposits',
+              count: depositCounts.approved
+            },
+            { 
+              to: '/deposit/rejected', 
+              text: 'Rejected Deposits',
+              count: depositCounts.rejected
+            },
+            { 
+              to: '/deposit/history', 
+              text: 'Deposit History',
+              count: depositCounts.history
+            },
           ],
         },
         {
@@ -188,14 +257,30 @@ const Sidebar = ({ isOpen }) => {
           icon: <RiRefund2Line className="text-[18px]" />,
           key: 'withdraw',
           links: [
-            { to: '/withdraw/pending', text: 'Pending Withdrawals' },
-            { to: '/withdraw/approved', text: 'Approved Withdrawals' },
-            { to: '/withdraw/rejected', text: 'Rejected Withdrawals' },
-            { to: '/withdraw/history', text: 'Withdraw History' },
+            { 
+              to: '/withdraw/pending', 
+              text: 'Pending Withdrawals',
+              count: withdrawalCounts.pending
+            },
+            { 
+              to: '/withdraw/approved', 
+              text: 'Approved Withdrawals',
+              count: withdrawalCounts.approved
+            },
+            { 
+              to: '/withdraw/rejected', 
+              text: 'Rejected Withdrawals',
+              count: withdrawalCounts.rejected
+            },
+            { 
+              to: '/withdraw/history', 
+              text: 'Withdraw History',
+              count: withdrawalCounts.history
+            },
           ],
         },
         {
-          label: 'Deposit Bonus System', // NEW MENU
+          label: 'Deposit Bonus System',
           icon: <FiGift className="text-[18px]" />,
           key: 'depositBonus',
           links: [
@@ -318,7 +403,7 @@ const Sidebar = ({ isOpen }) => {
               openMenu === key ? 'max-h-96' : 'max-h-0'
             }`}
           >
-            {links.map(({ to, text }) => (
+            {links.map(({ to, text, count }) => (
               <NavLink
                 key={text}
                 to={to}
@@ -332,6 +417,11 @@ const Sidebar = ({ isOpen }) => {
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 group-hover:scale-125 transition-transform duration-300"></div>
                 {text}
+                {count > 0 && (
+                  <span className="ml-auto bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                    {formatCount(count)}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
@@ -357,7 +447,10 @@ const Sidebar = ({ isOpen }) => {
         </NavLink>
         
         {/* Logout Button */}
-        <button onClick={logout} className="flex items-center w-full px-3 py-2.5 text-[15px] lg:text-[16px] cursor-pointer rounded-lg transition-all duration-300 text-orange-200 hover:bg-orange-800/40 hover:text-white hover:translate-x-1 mt-2 group">
+        <button 
+          onClick={logout} 
+          className="flex items-center w-full px-3 py-2.5 text-[15px] lg:text-[16px] cursor-pointer rounded-lg transition-all duration-300 text-orange-200 hover:bg-orange-800/40 hover:text-white hover:translate-x-1 mt-2 group"
+        >
           <span className="flex items-center gap-3">
             <FiSettings className="text-[18px] group-hover:scale-110 transition-transform duration-300" />
             Logout

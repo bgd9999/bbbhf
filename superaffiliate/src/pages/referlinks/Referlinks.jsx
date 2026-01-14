@@ -29,7 +29,7 @@ import toast from 'react-hot-toast';
 
 const Referlinks = () => {
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
-  const website_url = 'https://bajiman.com'; // Your website URL
+  const website_url = 'http://localhost:5173'; // Your website URL
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('links');
@@ -390,7 +390,7 @@ const Referlinks = () => {
             </div>
 
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="bg-white rounded-[5px] p-6 border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -401,34 +401,6 @@ const Referlinks = () => {
                   </div>
                   <div className="p-3 bg-blue-500 rounded-xl">
                     <FaMousePointer className="text-white text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Referrals</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatNumber(referralData.totalConversions)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-500 rounded-xl">
-                    <FaUsers className="text-white text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {referralData.conversionRate.toFixed(2)}%
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-500 rounded-xl">
-                    <FaChartLine className="text-white text-xl" />
                   </div>
                 </div>
               </div>
