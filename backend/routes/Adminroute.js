@@ -11,6 +11,7 @@ const FAQ = require("../models/FAQ");
 const GameCategory = require("../models/GameCategory");
 const GameProvider = require("../models/GameProvider");
 const {User} = require("../models/User");
+const mongoose=require("mongoose")
 // Middleware to check if user is authenticated as admin
 const adminAuth = (req, res, next) => {
   // Implement your authentication logic here
