@@ -1733,7 +1733,7 @@ Userrouter.get("/all-transactions", authenticateToken, async (req, res) => {
 // });
 
 
-router.post("/callback-data-game", async (req, res) => {
+Userrouter.post("/callback-data-game", async (req, res) => {
   try {
     // Extract fields from request body (support both old and new formats)
     let {
