@@ -73,7 +73,7 @@ const Home = () => {
 
   const faqData = [
     {
-      question: "How do I join the http://localhost:4500 Affiliate Program?",
+      question: "How do I join the BajiMan Affiliate Program?",
       answer: "Click the 'Join Now' button, fill out the registration form, and our team will review your application within 24-48 hours."
     },
     {
@@ -102,7 +102,7 @@ const Home = () => {
     {
       name: "Sarah J.",
       role: "Elite Affiliate",
-      quote: "http://localhost:4500's affiliate program has been a game-changer! The high commissions and real-time tracking make it easy to earn big.",
+      quote: "BajiMan's affiliate program has been a game-changer! The high commissions and real-time tracking make it easy to earn big.",
       image: "https://via.placeholder.com/100"
     },
     {
