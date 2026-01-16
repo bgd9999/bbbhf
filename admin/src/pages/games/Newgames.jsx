@@ -261,10 +261,10 @@ const handleSaveOrUpdateGame = async (gameApiID) => {
 
   try {
     const formData = new FormData();
-    formData.append("gameApiID", gameToSave._id); // Changed from game_uuid to _id
+    formData.append("gameApiID", gameToSave.game_uuid); // Changed from game_uuid to _id
     formData.append("name", gameToSave.name);
     formData.append("provider", gameToSave.provider.name);
-    
+    console.log("gameApiID",gameToSave)
     // Add category to form data
     const selectedCat = categories.find(cat => 
       cat._id === gameToSave.localCategory || cat.name === gameToSave.localCategory
