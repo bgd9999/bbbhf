@@ -395,16 +395,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUserData(null);
-    delete axios.defaults.headers.common["Authorization"];
-    setProfileDropdownOpen(false);
-    navigate("/");
-  };
-
   const handleDownloadClick = () => {
     const hideUntil = Date.now() + (30 * 24 * 60 * 60 * 1000);
     localStorage.setItem("mobileAppDownloadHiddenUntil", hideUntil.toString());
@@ -651,14 +641,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
                       </NavLink>
                     ))}
                   </div>
-                  <div className="border-t border-[#333] p-3">
-                    <button
-                      className="flex items-center justify-center gap-2 w-full py-2 text-sm rounded-md border border-[#333] text-gray-300 hover:bg-[#222] hover:text-white transition"
-                      onClick={logout}
-                    >
-                      <FiLogOut /> Log out
-                    </button>
-                  </div>
+   
                 </div>
               )}
             </div>
