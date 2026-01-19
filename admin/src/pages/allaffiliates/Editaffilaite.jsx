@@ -744,8 +744,6 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          step="0.01"
-                          min="0.01"
                           value={balanceForm.amount}
                           onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -794,8 +792,6 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          step="0.01"
-                          min="0.01"
                           max={selectedAffiliate.pendingEarnings || 0}
                           value={balanceForm.amount}
                           onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
