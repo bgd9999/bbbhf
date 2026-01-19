@@ -798,28 +798,41 @@ Authrouter.post("/signup", async (req, res) => {
       // Ensure CPA rate is a valid number
       const registrationBonus = Number(affiliate.cpaRate) || 0;
       
-      // Add registration bonus to affiliate
-      await affiliate.addRegistrationBonus(
-        newUser._id,
-        newUser._id, // Using user ID as registration ID
-        registrationBonus,
-        'New user registration bonus',
-        { currency: 'BDT' }
-      );
-
-      // Update affiliate's referred users
-      await Affiliate.findByIdAndUpdate(affiliate._id, {
-        $inc: { referralCount: 1 },
-        $push: {
-          referredUsers: {
-            user: newUser._id,
-            joinedAt: new Date(),
-            earnedAmount: registrationBonus,
-            userStatus: 'active',
-            lastActivity: new Date()
-          }
-        }
+      // Create the earning record manually to ensure all required fields are present
+      const earningRecord = {
+        amount: registrationBonus,
+        type: 'registration_bonus',
+        description: 'New user registration bonus',
+        status: 'pending',
+        referredUser: newUser._id,
+        sourceId: newUser._id,
+        sourceType: 'registration',
+        commissionRate: 1,
+        sourceAmount: registrationBonus,
+        calculatedAmount: registrationBonus,
+        earnedAt: new Date(),
+        metadata: { currency: 'BDT' }
+      };
+      
+      // Add to earnings history using direct array push
+      affiliate.earningsHistory.push(earningRecord);
+      
+      // Update affiliate totals
+      affiliate.totalEarnings += registrationBonus;
+      affiliate.pendingEarnings += registrationBonus;
+      affiliate.referralCount += 1;
+      
+      // Add to referredUsers array
+      affiliate.referredUsers.push({
+        user: newUser._id,
+        joinedAt: new Date(),
+        earnedAmount: registrationBonus,
+        userStatus: 'active',
+        lastActivity: new Date()
       });
+      
+      // Save the affiliate document
+      await affiliate.save();
 
       console.log(`Affiliate commission recorded: Affiliate ${affiliate._id} earned ${registrationBonus} BDT`);
     }
@@ -914,7 +927,6 @@ Authrouter.post("/signup", async (req, res) => {
     });
   }
 });
-
 // Get referral statistics
 Authrouter.get("/referral-stats", async (req, res) => {
   try {
