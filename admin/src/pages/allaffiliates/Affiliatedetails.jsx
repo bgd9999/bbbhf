@@ -10,7 +10,7 @@ import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const Editaffilaite = () => {
+const Affiliatedetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
@@ -718,17 +718,9 @@ const Editaffilaite = () => {
               <div className="space-y-6">
                 {/* Balance Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="text-green-800 font-semibold">Total Earnings</h4>
-                    <p className="text-2xl font-bold text-green-900">{formatCurrency(selectedAffiliate.totalEarnings || 0)}</p>
-                  </div>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h4 className="text-yellow-800 font-semibold">Pending Earnings</h4>
+                    <h4 className="text-yellow-800 font-semibold">Balance</h4>
                     <p className="text-2xl font-bold text-yellow-900">{formatCurrency(selectedAffiliate.pendingEarnings || 0)}</p>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="text-blue-800 font-semibold">Paid Earnings</h4>
-                    <p className="text-2xl font-bold text-blue-900">{formatCurrency(selectedAffiliate.paidEarnings || 0)}</p>
                   </div>
                 </div>
 
@@ -744,8 +736,6 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          step="0.01"
-                          min="0.01"
                           value={balanceForm.amount}
                           onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -794,9 +784,6 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          step="0.01"
-                          min="0.01"
-                          max={selectedAffiliate.pendingEarnings || 0}
                           value={balanceForm.amount}
                           onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -921,21 +908,6 @@ const Editaffilaite = () => {
                   </div>
                 ) : performanceData ? (
                   <div className="space-y-6">
-                    {/* Performance Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <h4 className="text-gray-600 text-sm font-medium">Total Earnings</h4>
-                        <p className="text-2xl font-bold text-gray-900">{formatCurrency(performanceData.metrics.totalEarnings)}</p>
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <h4 className="text-gray-600 text-sm font-medium">Pending Earnings</h4>
-                        <p className="text-2xl font-bold text-yellow-600">{formatCurrency(performanceData.metrics.pendingEarnings)}</p>
-                      </div>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <h4 className="text-gray-600 text-sm font-medium">Transactions</h4>
-                        <p className="text-2xl font-bold text-gray-900">{performanceData.metrics.transactionCount}</p>
-                      </div>
-                    </div>
 
                     {/* Earnings by Type */}
                     {performanceData.earningsByType && (
@@ -1226,4 +1198,4 @@ const Editaffilaite = () => {
   );
 };
 
-export default Editaffilaite;
+export default Affiliatedetails;
