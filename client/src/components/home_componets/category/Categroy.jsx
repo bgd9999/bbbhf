@@ -328,7 +328,6 @@ const CategoryContent = () => {
   const fetchExclusiveGames = async () => {
     try {
       const response = await axios.get(`${base_url}/api/menu-games`);
-      console.log("Menu games API response:", response.data);
       
       let gamesData = [];
       
