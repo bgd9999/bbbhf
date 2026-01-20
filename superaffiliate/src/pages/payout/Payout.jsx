@@ -618,7 +618,16 @@ const Payout = () => {
                 </div>
               </div>
             </div>
-
+ 
+              <div className="relative flex items-center justify-center overflow-hidden">
+                
+                {/* Marquee text */}
+                <div className="marquee-container overflow-hidden w-full">
+                   <marquee className="border-[1px] border-gray-200 font-medium p-[10px] text-lg">
+                        💰 IMPORTANT NOTICE:  Every night at 12:00 AM (midnight), your commission earnings will be automatically added to your account!
+                      </marquee>
+                </div>
+              </div>
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-[5px] p-6 border border-gray-200">

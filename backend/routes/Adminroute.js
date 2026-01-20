@@ -11331,4 +11331,231 @@ Adminrouter.get("/affiliates/adjustment-stats", async (req, res) => {
   }
 });
 
+
+// ==================== SIMPLE PAYOUT ROUTES ====================
+
+// 1. GET all payouts (simple) - WITH ERROR FIX
+Adminrouter.get("/affilaite-payouts", async (req, res) => {
+  try {
+    // Using .lean() to get plain objects and bypass Mongoose virtuals
+    const payouts = await Payout.find()
+      .populate("affiliate", "firstName lastName email")
+      .populate("processedBy", "firstName lastName")
+      .sort({ createdAt: -1 })
+      .lean(); // Use lean() to avoid document methods
+
+    // Safely transform the data
+    const safePayouts = payouts.map(payout => {
+      // Create a safe copy
+      const safePayout = { ...payout };
+      
+      // Safely handle affiliate
+      if (safePayout.affiliate) {
+        safePayout.affiliate = {
+          _id: safePayout.affiliate._id,
+          firstName: safePayout.affiliate.firstName || '',
+          lastName: safePayout.affiliate.lastName || '',
+          email: safePayout.affiliate.email || '',
+          affiliateCode: safePayout.affiliate.affiliateCode || ''
+        };
+      }
+      
+      // Safely handle processedBy
+      if (safePayout.processedBy) {
+        safePayout.processedBy = {
+          _id: safePayout.processedBy._id,
+          firstName: safePayout.processedBy.firstName || '',
+          lastName: safePayout.processedBy.lastName || ''
+        };
+      }
+      
+      return safePayout;
+    });
+
+    res.json({
+      success: true,
+      count: safePayouts.length,
+      data: safePayouts
+    });
+  } catch (error) {
+    console.error("Error fetching payouts:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch payouts",
+      details: error.message
+    });
+  }
+});
+
+// 2. GET single payout by ID (view) - WITH ERROR FIX
+Adminrouter.get("/affilaite-payouts/:id", async (req, res) => {
+  try {
+    // Use select to exclude virtual fields and lean to get plain object
+    const payout = await Payout.findById(req.params.id)
+      .populate("affiliate", "firstName lastName email affiliateCode")
+      .populate("processedBy", "firstName lastName")
+      .lean();
+
+    if (!payout) {
+      return res.status(404).json({
+        success: false,
+        error: "Payout not found"
+      });
+    }
+
+    // Safely transform the payout data
+    const safePayout = { ...payout };
+    
+    // Safely handle affiliate
+    if (safePayout.affiliate) {
+      safePayout.affiliate = {
+        _id: safePayout.affiliate._id,
+        firstName: safePayout.affiliate.firstName || '',
+        lastName: safePayout.affiliate.lastName || '',
+        email: safePayout.affiliate.email || '',
+        affiliateCode: safePayout.affiliate.affiliateCode || ''
+      };
+    }
+    
+    // Safely handle processedBy
+    if (safePayout.processedBy) {
+      safePayout.processedBy = {
+        _id: safePayout.processedBy._id,
+        firstName: safePayout.processedBy.firstName || '',
+        lastName: safePayout.processedBy.lastName || ''
+      };
+    }
+
+    res.json({
+      success: true,
+      data: safePayout
+    });
+  } catch (error) {
+    console.error("Error fetching payout:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch payout",
+      details: error.message
+    });
+  }
+});
+
+// 3. DELETE payout by ID - No changes needed here
+Adminrouter.delete("/affilaite-payouts/:id", async (req, res) => {
+  try {
+    const payout = await Payout.findById(req.params.id);
+
+    if (!payout) {
+      return res.status(404).json({
+        success: false,
+        error: "Payout not found"
+      });
+    }
+
+    await Payout.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Payout deleted successfully",
+      deletedPayout: {
+        id: payout._id,
+        payoutId: payout.payoutId,
+        amount: payout.amount,
+        affiliate: payout.affiliate
+      }
+    });
+  } catch (error) {
+    console.error("Error deleting payout:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to delete payout"
+    });
+  }
+});
+// 4. PUT update payout status
+Adminrouter.put("/affilaite-payouts/:id/status", async (req, res) => {
+  try {
+    const { status, notes, transactionId } = req.body;
+    const payoutId = req.params.id;
+
+    // Validate status
+    const validStatuses = ['pending', 'processing', 'completed', 'failed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Valid status is required. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
+
+    // Find payout
+    const payout = await Payout.findById(payoutId);
+    if (!payout) {
+      return res.status(404).json({
+        success: false,
+        error: "Payout not found"
+      });
+    }
+
+    // Update status
+    payout.status = status;
+    
+    // Add notes if provided
+    if (notes) {
+      payout.processorNotes = notes;
+    }
+    
+    // Add transaction ID if provided
+    if (transactionId) {
+      // Set transaction ID based on payment method
+      switch (payout.paymentMethod) {
+        case 'bkash':
+        case 'nagad':
+        case 'rocket':
+          payout.paymentDetails[payout.paymentMethod].transactionId = transactionId;
+          break;
+        case 'binance':
+        case 'crypto':
+          payout.paymentDetails[payout.paymentMethod].transactionHash = transactionId;
+          break;
+        case 'bank_transfer':
+          payout.paymentDetails.bank_transfer.referenceNumber = transactionId;
+          break;
+      }
+    }
+    
+    // Set timestamps based on status
+    if (status === 'processing' && !payout.processedAt) {
+      payout.processedAt = new Date();
+    }
+    
+    if (status === 'completed' && !payout.completedAt) {
+      payout.completedAt = new Date();
+    }
+    
+    // If you have user authentication, set processedBy
+    // payout.processedBy = req.user._id;
+
+    await payout.save();
+
+    res.json({
+      success: true,
+      message: `Payout status updated to ${status}`,
+      data: {
+        id: payout._id,
+        payoutId: payout.payoutId,
+        status: payout.status,
+        amount: payout.amount,
+        processedAt: payout.processedAt,
+        completedAt: payout.completedAt
+      }
+    });
+  } catch (error) {
+    console.error("Error updating payout status:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update payout status",
+      details: error.message
+    });
+  }
+});
 module.exports = Adminrouter;

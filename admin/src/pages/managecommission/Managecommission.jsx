@@ -1359,40 +1359,8 @@ const Managecommission = () => {
                     placeholder="Enter reason for bulk adjustment..."
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Limit per batch</label>
-                    <input 
-                      type="number" 
-                      name="limit"
-                      value={bulkAdjustmentForm.limit}
-                      onChange={handleBulkAdjustmentChange}
-                      className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      min="1"
-                      max="500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Skip records</label>
-                    <input 
-                      type="number" 
-                      name="skip"
-                      value={bulkAdjustmentForm.skip}
-                      onChange={handleBulkAdjustmentChange}
-                      className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      min="0"
-                    />
-                  </div>
-                </div>
               </div>
               <div className="mt-6 flex justify-between">
-                <button
-                  type="button"
-                  onClick={fetchAdjustmentPreview}
-                  className="px-4 py-2 border border-blue-300 text-blue-600 cursor-pointer rounded-md text-sm font-medium hover:bg-blue-50 focus:outline-none transition-colors duration-200"
-                >
-                  Preview
-                </button>
                 <div className="flex space-x-3">
                   <button
                     type="button"

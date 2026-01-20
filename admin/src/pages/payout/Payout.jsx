@@ -1,1052 +1,1102 @@
 import React, { useState, useEffect } from 'react';
-import { FaSearch, FaFilter, FaEye, FaCheck, FaTimes, FaRedo, FaMoneyBill, FaCalendar, FaUser, FaPhone, FaEnvelope, FaIdCard, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
-import Sidebar from '../../components/Sidebar';
+import { FaEdit, FaTrash, FaEye, FaDownload, FaSearch, FaFilter, FaSync, FaCheck, FaTimes, FaClock, FaCog } from 'react-icons/fa';
 import Header from '../../components/Header';
-import {useNavigate} from "react-router-dom"
-import { FaSpinner } from 'react-icons/fa';
+import Sidebar from '../../components/Sidebar';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const Payout = () => {
+  const base_url = import.meta.env.VITE_API_KEY_Base_URL;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [payouts, setPayouts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPayout, setSelectedPayout] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'descending' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [showStatusToast, setShowStatusToast] = useState(false);
-  const [statusToastMessage, setStatusToastMessage] = useState('');
-  const [selectedPayout, setSelectedPayout] = useState(null);
-  const [showPayoutDetails, setShowPayoutDetails] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [payouts, setPayouts] = useState([]);
-  const [stats, setStats] = useState({});
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalPayouts, setTotalPayouts] = useState(0);
-  const [showProcessModal, setShowProcessModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedPayoutId, setSelectedPayoutId] = useState(null);
-  const [processForm, setProcessForm] = useState({
-    transactionId: '',
-    processorNotes: '',
-    estimatedCompletionDate: ''
+  const [itemsPerPage] = useState(10);
+  const [statusUpdateData, setStatusUpdateData] = useState({
+    status: '',
+    notes: '',
+    transactionId: ''
   });
-  const [completeForm, setCompleteForm] = useState({
-    finalAmount: '',
-    fees: {
-      processingFee: 0,
-      transactionFee: 0,
-      tax: 0,
-      otherDeductions: 0
-    },
-    processorNotes: ''
-  });
-  const [rejectForm, setRejectForm] = useState({
-    reason: '',
-    failureReason: 'other'
-  });
-
-  const navigate = useNavigate();
-  const itemsPerPage = 10;
-  const base_url = import.meta.env.VITE_API_KEY_Base_URL;
-
+  
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  // Status options
-  const statuses = ['all', 'pending', 'processing', 'completed', 'failed', 'cancelled', 'on_hold'];
-  const paymentMethods = ['all', 'bkash', 'nagad', 'rocket', 'binance', 'bank_transfer', 'crypto', 'other'];
-  const failureReasons = [
-    'insufficient_balance',
-    'invalid_account',
-    'network_error',
-    'bank_rejection',
-    'manual_review',
-    'suspected_fraud',
-    'other'
-  ];
-
-  // Fetch payouts from API
+  
+  // Fetch payouts on component mount
   useEffect(() => {
-    const fetchPayouts = async () => {
-      try {
-        setLoading(true);
-        const queryParams = new URLSearchParams({
-          page: currentPage,
-          limit: itemsPerPage,
-          status: statusFilter !== 'all' ? statusFilter : '',
-          paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : '',
-          startDate: startDate,
-          endDate: endDate,
-          search: searchTerm,
-          sortBy: sortConfig.key || 'createdAt',
-          sortOrder: sortConfig.direction
-        });
-
-        const response = await fetch(`${base_url}/api/admin/payouts?${queryParams}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch payouts');
-        }
-
-        const data = await response.json();
-        setPayouts(data.payouts || []);
-        setStats(data.stats || {});
-        setTotalPages(data.pagination?.pages || 1);
-        setTotalPayouts(data.pagination?.total || 0);
-      } catch (err) {
-        setError(err.message);
-        console.error('Error fetching payouts:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPayouts();
-  }, [currentPage, statusFilter, paymentMethodFilter, startDate, endDate, searchTerm, sortConfig]);
+  }, []);
 
-  // Handle sort request
-  const requestSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+  const fetchPayouts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base_url}/api/admin/affilaite-payouts`);
+      
+      if (response.data.success) {
+        setPayouts(response.data.data || []);
+      } else {
+        toast.error('Failed to fetch payouts');
+      }
+    } catch (error) {
+      console.error('Error fetching payouts:', error);
+      toast.error('Failed to fetch payouts');
+    } finally {
+      setLoading(false);
     }
-    setSortConfig({ key, direction });
-    setCurrentPage(1);
   };
 
-  // Get sort icon
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return <FaSort className="text-gray-400" />;
-    if (sortConfig.direction === 'ascending') return <FaSortUp className="text-orange-500" />;
-    return <FaSortDown className="text-orange-500" />;
+  const handleViewPayout = async (id) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base_url}/api/admin/affilaite-payouts/${id}`);
+      
+      if (response.data.success) {
+        setSelectedPayout(response.data.data);
+        setShowViewModal(true);
+      } else {
+        toast.error('Failed to fetch payout details');
+      }
+    } catch (error) {
+      console.error('Error fetching payout:', error);
+      toast.error('Failed to fetch payout details');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
+  const handleDeletePayout = async () => {
+    if (!selectedPayout) return;
+    
+    try {
+      setLoading(true);
+      const response = await axios.delete(`${base_url}/api/admin/affilaite-payouts/${selectedPayout._id}`);
+      
+      if (response.data.success) {
+        toast.success('Payout deleted successfully');
+        // Remove the deleted payout from the list
+        setPayouts(payouts.filter(payout => payout._id !== selectedPayout._id));
+        setShowDeleteModal(false);
+        setSelectedPayout(null);
+      } else {
+        toast.error(response.data.error || 'Failed to delete payout');
+      }
+    } catch (error) {
+      console.error('Error deleting payout:', error);
+      toast.error('Failed to delete payout');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Format currency
-  const formatCurrency = (amount, currency = 'BDT') => {
-    return new Intl.NumberFormat('en-BD', {
+  const handleStatusUpdate = async () => {
+    if (!selectedPayout || !statusUpdateData.status) return;
+    
+    try {
+      setLoading(true);
+      const response = await axios.put(
+        `${base_url}/api/admin/affilaite-payouts/${selectedPayout._id}/status`,
+        statusUpdateData
+      );
+      
+      if (response.data.success) {
+        toast.success(`Payout status updated to ${statusUpdateData.status}`);
+        
+        // Update the payout in the list
+        setPayouts(payouts.map(payout => 
+          payout._id === selectedPayout._id 
+            ? { ...payout, status: statusUpdateData.status, ...response.data.data }
+            : payout
+        ));
+        
+        // Reset form and close modal
+        setStatusUpdateData({
+          status: '',
+          notes: '',
+          transactionId: ''
+        });
+        setShowStatusModal(false);
+        setSelectedPayout(null);
+      } else {
+        toast.error(response.data.error || 'Failed to update payout status');
+      }
+    } catch (error) {
+      console.error('Error updating payout status:', error);
+      toast.error('Failed to update payout status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openDeleteModal = (payout) => {
+    setSelectedPayout(payout);
+    setShowDeleteModal(true);
+  };
+
+  const openStatusModal = (payout) => {
+    setSelectedPayout(payout);
+    setStatusUpdateData({
+      status: payout.status,
+      notes: '',
+      transactionId: ''
+    });
+    setShowStatusModal(true);
+  };
+
+  const formatCurrency = (amount, currency) => {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency
+      currency: currency || 'BDT',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
-  // Get status badge color
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      processing: 'bg-blue-100 text-blue-800 border-blue-200',
-      completed: 'bg-green-100 text-green-800 border-green-200',
-      failed: 'bg-red-100 text-red-800 border-red-200',
-      cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
-      on_hold: 'bg-orange-100 text-orange-800 border-orange-200'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
-
-  // Get payment method display name
-  const getPaymentMethodDisplay = (method) => {
-    const methods = {
-      bkash: 'bKash',
-      nagad: 'Nagad',
-      rocket: 'Rocket',
-      binance: 'Binance',
-      bank_transfer: 'Bank Transfer',
-      crypto: 'Cryptocurrency',
-      other: 'Other'
-    };
-    return methods[method] || method;
-  };
-
-  // Process payout
-  const handleProcessPayout = (payoutId) => {
-    setSelectedPayoutId(payoutId);
-    setProcessForm({
-      transactionId: '',
-      processorNotes: '',
-      estimatedCompletionDate: ''
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    setShowProcessModal(true);
   };
 
-  const submitProcess = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${base_url}/api/admin/payouts/${selectedPayoutId}/process`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify(processForm)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process payout');
-      }
-
-      const data = await response.json();
-      
-      // Update local state
-      setPayouts(payouts.map(payout => 
-        payout._id === selectedPayoutId 
-          ? { ...payout, status: 'processing', processedAt: new Date() }
-          : payout
-      ));
-
-      setStatusToastMessage('Payout is now being processed');
-      setShowStatusToast(true);
-      setShowProcessModal(false);
-    } catch (err) {
-      setError(err.message);
-      setStatusToastMessage('Error processing payout');
-      setShowStatusToast(true);
-    } finally {
-      setTimeout(() => setShowStatusToast(false), 3000);
+  const getStatusBadgeColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Complete payout
-  const handleCompletePayout = (payout) => {
-    setSelectedPayoutId(payout._id);
-    setCompleteForm({
-      finalAmount: payout.amount,
-      fees: {
-        processingFee: payout.fees?.processingFee || 0,
-        transactionFee: payout.fees?.transactionFee || 0,
-        tax: payout.fees?.tax || 0,
-        otherDeductions: payout.fees?.otherDeductions || 0
-      },
-      processorNotes: ''
-    });
-    setShowCompleteModal(true);
-  };
-
-  const submitComplete = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${base_url}/api/admin/payouts/${selectedPayoutId}/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify(completeForm)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to complete payout');
-      }
-
-      const data = await response.json();
-      
-      // Update local state
-      setPayouts(payouts.map(payout => 
-        payout._id === selectedPayoutId 
-          ? { 
-              ...payout, 
-              status: 'completed', 
-              completedAt: new Date(),
-              netAmount: data.payout?.netAmount || payout.netAmount
-            }
-          : payout
-      ));
-
-      setStatusToastMessage('Payout completed successfully');
-      setShowStatusToast(true);
-      setShowCompleteModal(false);
-    } catch (err) {
-      setError(err.message);
-      setStatusToastMessage('Error completing payout');
-      setShowStatusToast(true);
-    } finally {
-      setTimeout(() => setShowStatusToast(false), 3000);
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return <FaCheck className="text-green-500" />;
+      case 'pending':
+        return <FaClock className="text-yellow-500" />;
+      case 'processing':
+        return <FaCog className="text-blue-500 animate-spin" />;
+      case 'failed':
+        return <FaTimes className="text-red-500" />;
+      case 'cancelled':
+        return <FaTimes className="text-gray-500" />;
+      default:
+        return <FaClock className="text-gray-500" />;
     }
   };
 
-  // Reject payout
-  const handleRejectPayout = (payoutId) => {
-    setSelectedPayoutId(payoutId);
-    setRejectForm({
-      reason: '',
-      failureReason: 'other'
-    });
-    setShowRejectModal(true);
-  };
-
-  const submitReject = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`${base_url}/api/admin/payouts/${selectedPayoutId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify(rejectForm)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to reject payout');
-      }
-
-      // Update local state
-      setPayouts(payouts.map(payout => 
-        payout._id === selectedPayoutId 
-          ? { ...payout, status: 'failed' }
-          : payout
-      ));
-
-      setStatusToastMessage('Payout rejected successfully');
-      setShowStatusToast(true);
-      setShowRejectModal(false);
-    } catch (err) {
-      setError(err.message);
-      setStatusToastMessage('Error rejecting payout');
-      setShowStatusToast(true);
-    } finally {
-      setTimeout(() => setShowStatusToast(false), 3000);
+  const getPriorityBadgeColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Retry payout
-  const handleRetryPayout = async (payoutId) => {
-    try {
-      const response = await fetch(`${base_url}/api/admin/payouts/${payoutId}/retry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({ notes: 'Retry initiated by admin' })
-      });
+  // Status options for dropdown
+  const statusOptions = [
+    { value: 'pending', label: 'Pending', color: 'text-yellow-600' },
+    { value: 'processing', label: 'Processing', color: 'text-blue-600' },
+    { value: 'completed', label: 'Completed', color: 'text-green-600' },
+    { value: 'failed', label: 'Failed', color: 'text-red-600' },
+    { value: 'cancelled', label: 'Cancelled', color: 'text-gray-600' }
+  ];
 
-      if (!response.ok) {
-        throw new Error('Failed to retry payout');
-      }
+  // Filter payouts based on search term and status
+  const filteredPayouts = payouts.filter(payout => {
+    const matchesSearch = 
+      payout.payoutId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payout.affiliate?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payout.affiliate?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payout.affiliate?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || payout.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
-      const data = await response.json();
-      
-      // Update local state
-      setPayouts(payouts.map(payout => 
-        payout._id === payoutId 
-          ? { ...payout, status: 'pending', retryAttempt: data.payout?.retryAttempt }
-          : payout
-      ));
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPayouts = filteredPayouts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
 
-      setStatusToastMessage('Payout retry initiated successfully');
-      setShowStatusToast(true);
-    } catch (err) {
-      setError(err.message);
-      setStatusToastMessage('Error retrying payout');
-      setShowStatusToast(true);
-    } finally {
-      setTimeout(() => setShowStatusToast(false), 3000);
-    }
+  const exportToCSV = () => {
+    const headers = [
+      'Payout ID',
+      'Affiliate Name',
+      'Affiliate Email',
+      'Amount',
+      'Net Amount',
+      'Currency',
+      'Status',
+      'Payment Method',
+      'Payout Type',
+      'Requested Date',
+      'Completed Date'
+    ];
+    
+    const csvData = filteredPayouts.map(payout => [
+      payout.payoutId,
+      `${payout.affiliate?.firstName || ''} ${payout.affiliate?.lastName || ''}`,
+      payout.affiliate?.email || '',
+      payout.amount,
+      payout.netAmount,
+      payout.currency,
+      payout.status,
+      payout.paymentMethod,
+      payout.payoutType,
+      formatDate(payout.requestedAt),
+      formatDate(payout.completedAt)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payouts_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Payouts exported successfully');
   };
 
-  // View payout details
-  const viewPayoutDetails = async (payout) => {
-    setSelectedPayout(payout);
-    setShowPayoutDetails(true);
-  };
-
-  // Close payout details
-  const closePayoutDetails = () => {
-    setShowPayoutDetails(false);
-    setSelectedPayout(null);
-  };
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, paymentMethodFilter, startDate, endDate]);
-
-  if (loading) {
-    return (
-      <section className="font-nunito h-screen">
-        <Header toggleSidebar={toggleSidebar} />
-        <div className="flex pt-[10vh]">
-          <Sidebar isOpen={isSidebarOpen} />
-          <main className={`transition-all duration-300 flex-1 p-6 overflow-y-auto h-[90vh] ${isSidebarOpen ? 'ml-[17%]' : 'ml-0'}`}>
-            <div className="flex items-center justify-center h-full">
-                 <div className="flex justify-center items-center py-8">
-                                             <FaSpinner className="animate-spin text-orange-500 text-2xl" />
-                                           </div>
-            </div>
-          </main>
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="font-nunito h-screen">
-        <Header toggleSidebar={toggleSidebar} />
-        <div className="flex pt-[10vh]">
-          <Sidebar isOpen={isSidebarOpen} />
-          <main className={`transition-all duration-300 flex-1 p-6 overflow-y-auto h-[90vh] ${isSidebarOpen ? 'ml-[17%]' : 'ml-0'}`}>
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-red-500 text-2xl mb-4">Error</div>
-                <p className="text-gray-600">{error}</p>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-md"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          </main>
-        </div>
-      </section>
-    );
-  }
+  // Calculate statistics
+  const totalAmount = payouts.reduce((sum, payout) => sum + payout.amount, 0);
+  const completedAmount = payouts
+    .filter(p => p.status === 'completed')
+    .reduce((sum, payout) => sum + payout.amount, 0);
+  const pendingAmount = payouts
+    .filter(p => p.status === 'pending')
+    .reduce((sum, payout) => sum + payout.amount, 0);
 
   return (
     <section className="font-nunito h-screen bg-gray-50">
       <Header toggleSidebar={toggleSidebar} />
+
       <div className="flex pt-[10vh]">
         <Sidebar isOpen={isSidebarOpen} />
+
         <main
           className={`transition-all duration-300 flex-1 p-6 overflow-y-auto h-[90vh] ${
-            isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'
+            isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%] ' : 'ml-0'
           }`}
         >
-          <div className="w-full mx-auto">
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Payout Management</h1>
-                <p className="text-sm text-gray-500 mt-1">Manage and process affiliate payouts efficiently</p>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {[
-                { title: 'Total Payouts', value: totalPayouts, color: 'blue' },
-                { title: 'Pending Payouts', value: payouts.filter(p => p.status === 'pending').length, color: 'yellow' },
-                { title: 'Processing Payouts', value: payouts.filter(p => p.status === 'processing').length, color: 'blue' },
-                { title: 'Total Amount', value: formatCurrency(payouts.reduce((sum, p) => sum + p.amount, 0)), color: 'green' },
-              ].map((stat, index) => (
-                <div key={index} className={`bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200`}>
-                  <h3 className="text-sm font-medium text-gray-500">{stat.title}</h3>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Filters Section */}
-            <div className="bg-white rounded-lg p-6 mb-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <FaFilter className="mr-2 text-orange-500" />
-                  Filters & Search
-                </h2>
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setStatusFilter('all');
-                    setPaymentMethodFilter('all');
-                    setStartDate('');
-                    setEndDate('');
-                  }}
-                  className="text-sm text-orange-500 hover:text-orange-700 flex items-center transition-colors duration-200"
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">Affiliate Payouts</h1>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={exportToCSV}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
                 >
-                  Clear All Filters
+                  <FaDownload /> Export CSV
+                </button>
+                <button
+                  onClick={fetchPayouts}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2 bg-theme_color text-white font-medium rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
                 </button>
               </div>
-
+            </div>
+            
+            {/* Filters and Search */}
+            <div className="bg-white rounded-lg p-4 mb-6 border border-gray-200 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Search Input */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaSearch className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm"
-                    placeholder="Search payout ID, affiliate..."
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm"
-                >
-                  {statuses.map((status, index) => (
-                    <option key={index} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                  ))}
-                </select>
-
-                {/* Payment Method Filter */}
-                <select
-                  value={paymentMethodFilter}
-                  onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm"
-                >
-                  {paymentMethods.map((method, index) => (
-                    <option key={index} value={method}>{getPaymentMethodDisplay(method)}</option>
-                  ))}
-                </select>
-
-                {/* Date Range */}
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm"
-                    placeholder="Start Date"
-                  />
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent shadow-sm"
-                    placeholder="End Date"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Results Count */}
-            <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 text-gray-600">
-              <p>
-                Showing {payouts.length} of {totalPayouts} payouts
-              </p>
-            </div>
-
-            {/* Payouts Table */}
-            <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-orange-500 to-orange-600">
-                    <tr>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider">
-                        Payout ID
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider">
-                        Affiliate
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider cursor-pointer" onClick={() => requestSort('amount')}>
-                        Amount {getSortIcon('amount')}
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider">
-                        Payment Method
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider cursor-pointer" onClick={() => requestSort('createdAt')}>
-                        Requested {getSortIcon('createdAt')}
-                      </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs md:text-sm font-semibold text-white uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {payouts.length > 0 ? (
-                      payouts.map((payout) => (
-                        <tr key={payout._id} className="hover:bg-gray-50 transition-colors duration-150">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-mono font-semibold text-gray-900">{payout.payoutId}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                                  <FaUser />
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {payout.affiliate?.firstName} {payout.affiliate?.lastName}
-                                </div>
-                                <div className="text-xs text-gray-500">{payout.affiliate?.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold text-gray-900">{formatCurrency(payout.amount, payout.currency)}</div>
-                            <div className="text-xs text-gray-500">Net: {formatCurrency(payout.netAmount, payout.currency)}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-700">{getPaymentMethodDisplay(payout.paymentMethod)}</div>
-                            <div className="text-xs text-gray-500">
-                              {payout.paymentDetails?.[payout.paymentMethod]?.phoneNumber || 
-                               payout.paymentDetails?.[payout.paymentMethod]?.walletAddress || 
-                               payout.paymentDetails?.[payout.paymentMethod]?.accountNumber || 
-                               'N/A'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${getStatusColor(payout.status)}`}>
-                              {payout.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-700">{formatDate(payout.requestedAt)}</div>
-                            {payout.processedAt && (
-                              <div className="text-xs text-gray-500">Processed: {formatDate(payout.processedAt)}</div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button 
-                                className="p-2 px-[8px] py-[7px] cursor-pointer bg-blue-600 text-white rounded-[3px] text-[16px] hover:bg-blue-700 shadow-sm"
-                                title="View details"
-                                onClick={() => viewPayoutDetails(payout)}
-                              >
-                                <FaEye />
-                              </button>
-                              
-                              {payout.status === 'pending' && (
-                                <>
-                                  <button 
-                                    className="p-2 px-[8px] py-[7px] cursor-pointer bg-green-600 text-white rounded-[3px] text-[16px] hover:bg-green-700 shadow-sm"
-                                    title="Process payout"
-                                    onClick={() => handleProcessPayout(payout._id)}
-                                  >
-                                    <FaCheck />
-                                  </button>
-                                  <button 
-                                    className="p-2 px-[8px] py-[7px] cursor-pointer bg-red-600 text-white rounded-[3px] text-[16px] hover:bg-red-700 shadow-sm"
-                                    title="Reject payout"
-                                    onClick={() => handleRejectPayout(payout._id)}
-                                  >
-                                    <FaTimes />
-                                  </button>
-                                </>
-                              )}
-                              
-                              {payout.status === 'processing' && (
-                                <button 
-                                  className="p-2 px-[8px] py-[7px] cursor-pointer bg-green-600 text-white rounded-[3px] text-[16px] hover:bg-green-700 shadow-sm"
-                                  title="Complete payout"
-                                  onClick={() => handleCompletePayout(payout)}
-                                >
-                                  <FaCheck />
-                                </button>
-                              )}
-                              
-                              {payout.status === 'failed' && payout.retryAttempt < payout.maxRetries && (
-                                <button 
-                                  className="p-2 px-[8px] py-[7px] cursor-pointer bg-orange-600 text-white rounded-[3px] text-[16px] hover:bg-orange-700 shadow-sm"
-                                  title="Retry payout"
-                                  onClick={() => handleRetryPayout(payout._id)}
-                                >
-                                  <FaRedo />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center">
-                          <div className="flex flex-col items-center justify-center text-gray-400">
-                            <FaSearch className="text-5xl mb-3 opacity-30" />
-                            <p className="text-lg font-medium text-gray-500">No payouts found</p>
-                            <p className="text-sm">Try adjusting your search or filters</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Pagination */}
-            {payouts.length > 0 && (
-              <div className="flex items-center justify-between mt-4 px-4 py-3 bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                      <span className="font-medium">
-                        {Math.min(currentPage * itemsPerPage, totalPayouts)}
-                      </span> of{' '}
-                      <span className="font-medium">{totalPayouts}</span> results
-                    </p>
-                  </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className={`relative cursor-pointer inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
-                          currentPage === 1 
-                            ? 'bg-gray-50 text-gray-800 cursor-not-allowed' 
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        Previous
-                      </button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`relative cursor-pointer inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page
-                              ? 'z-10 bg-orange-500 text-white'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className={`relative cursor-pointer inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
-                          currentPage === totalPages
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        Next
-                      </button>
-                    </nav>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* Process Payout Modal */}
-      {showProcessModal && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center z-[10000] p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Process Payout</h3>
-            <form onSubmit={submitProcess}>
-              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Transaction ID</label>
-                  <input 
-                    type="text" 
-                    value={processForm.transactionId}
-                    onChange={(e) => setProcessForm(prev => ({ ...prev, transactionId: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    placeholder="Enter transaction ID"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Estimated Completion Date</label>
-                  <input 
-                    type="date" 
-                    value={processForm.estimatedCompletionDate}
-                    onChange={(e) => setProcessForm(prev => ({ ...prev, estimatedCompletionDate: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Processor Notes</label>
-                  <textarea 
-                    value={processForm.processorNotes}
-                    onChange={(e) => setProcessForm(prev => ({ ...prev, processorNotes: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    rows="3"
-                    placeholder="Add any notes for processing..."
-                  />
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowProcessModal(false)}
-                  className="px-4 py-2 border border-gray-300 cursor-pointer rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-orange-600 text-white cursor-pointer rounded-md text-sm font-medium hover:bg-orange-700 focus:outline-none transition-colors duration-200"
-                >
-                  Process Payout
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Complete Payout Modal */}
-      {showCompleteModal && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center z-[10000] p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Payout</h3>
-            <form onSubmit={submitComplete}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Final Amount</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={completeForm.finalAmount}
-                    onChange={(e) => setCompleteForm(prev => ({ ...prev, finalAmount: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Processing Fee</label>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      value={completeForm.fees.processingFee}
-                      onChange={(e) => setCompleteForm(prev => ({ 
-                        ...prev, 
-                        fees: { ...prev.fees, processingFee: parseFloat(e.target.value) || 0 }
-                      }))}
-                      className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Transaction Fee</label>
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      value={completeForm.fees.transactionFee}
-                      onChange={(e) => setCompleteForm(prev => ({ 
-                        ...prev, 
-                        fees: { ...prev.fees, transactionFee: parseFloat(e.target.value) || 0 }
-                      }))}
-                      className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Search Payouts
+                  </label>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      placeholder="Search by ID, name, or email..."
                     />
                   </div>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Processor Notes</label>
-                  <textarea 
-                    value={completeForm.processorNotes}
-                    onChange={(e) => setCompleteForm(prev => ({ ...prev, processorNotes: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    rows="3"
-                    placeholder="Add completion notes..."
-                  />
-                </div>
-              </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCompleteModal(false)}
-                  className="px-4 py-2 border border-gray-300 cursor-pointer rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white cursor-pointer rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none transition-colors duration-200"
-                >
-                  Complete Payout
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Payout Modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center z-[10000] p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Payout</h3>
-            <form onSubmit={submitReject}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Failure Reason</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status Filter
+                  </label>
                   <select
-                    value={rejectForm.failureReason}
-                    onChange={(e) => setRejectForm(prev => ({ ...prev, failureReason: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
-                    {failureReasons.map((reason, index) => (
-                      <option key={index} value={reason}>
-                        {reason.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    <option value="all">All Status</option>
+                    {statusOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Reason Details</label>
-                  <textarea 
-                    value={rejectForm.reason}
-                    onChange={(e) => setRejectForm(prev => ({ ...prev, reason: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 p-[10px] rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    rows="3"
-                    placeholder="Provide detailed reason for rejection..."
-                    required
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sort By
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      // Implement sorting logic here
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="amount-high">Amount (High to Low)</option>
+                    <option value="amount-low">Amount (Low to High)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Items per page
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      // Handle items per page change
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    defaultValue="10"
+                  >
+                    <option value="5">5 items</option>
+                    <option value="10">10 items</option>
+                    <option value="20">20 items</option>
+                    <option value="50">50 items</option>
+                  </select>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowRejectModal(false)}
-                  className="px-4 py-2 border border-gray-300 cursor-pointer rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-red-600 text-white cursor-pointer rounded-md text-sm font-medium hover:bg-red-700 focus:outline-none transition-colors duration-200"
-                >
-                  Reject Payout
-                </button>
+            </div>
+            
+            {/* Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                    <FaSync className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Total Payouts</div>
+                    <div className="text-2xl font-bold text-gray-800">{payouts.length}</div>
+                  </div>
+                </div>
               </div>
-            </form>
+              
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg mr-3">
+                    <FaCheck className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Total Amount</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {formatCurrency(totalAmount, 'BDT')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg mr-3">
+                    <FaCheck className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Completed</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {payouts.filter(p => p.status === 'completed').length}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatCurrency(completedAmount, 'BDT')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                    <FaClock className="w-5 h-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Pending</div>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {payouts.filter(p => p.status === 'pending').length}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatCurrency(pendingAmount, 'BDT')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                    <FaCog className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Processing</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {payouts.filter(p => p.status === 'processing').length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Payouts Table */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+              {loading && payouts.length === 0 ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="text-center">
+                    <div className="flex space-x-2 mb-4">
+                      <div className="h-3 w-3 bg-orange-500 rounded-full animate-bounce"></div>
+                      <div className="h-3 w-3 bg-orange-500 rounded-full animate-bounce animation-delay-200"></div>
+                      <div className="h-3 w-3 bg-orange-500 rounded-full animate-bounce animation-delay-400"></div>
+                    </div>
+                    <p className="text-gray-500">Loading payouts...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Payout ID
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Affiliate
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Payment Method
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Requested Date
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentPayouts.length > 0 ? (
+                          currentPayouts.map((payout) => (
+                            <tr key={payout._id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {payout.payoutId}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getPriorityBadgeColor(payout.priority)}`}>
+                                    {payout.priority || 'normal'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <span className="text-gray-600 font-medium">
+                                      {payout.affiliate?.firstName?.charAt(0)}{payout.affiliate?.lastName?.charAt(0)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {payout.affiliate?.firstName} {payout.affiliate?.lastName}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                      {payout.affiliate?.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {formatCurrency(payout.amount, payout.currency)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Net: {formatCurrency(payout.netAmount, payout.currency)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="mr-2">
+                                    {getStatusIcon(payout.status)}
+                                  </div>
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(payout.status)}`}>
+                                    {payout.status}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                                <div className="flex items-center">
+                                  <div className="mr-2">
+                                    {payout.paymentMethod === 'bkash' && <span className="text-green-600 font-bold">bKash</span>}
+                                    {payout.paymentMethod === 'nagad' && <span className="text-red-600 font-bold">Nagad</span>}
+                                    {payout.paymentMethod === 'rocket' && <span className="text-blue-600 font-bold">Rocket</span>}
+                                    {!['bkash', 'nagad', 'rocket'].includes(payout.paymentMethod) && payout.paymentMethod}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatDate(payout.requestedAt)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleViewPayout(payout._id)}
+                                    className="flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-md transition-colors"
+                                    title="View Details"
+                                  >
+                                    <FaEye /> View
+                                  </button>
+                                  <button
+                                    onClick={() => openStatusModal(payout)}
+                                    className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-600 hover:bg-green-200 rounded-md transition-colors"
+                                    title="Update Status"
+                                  >
+                                    <FaEdit /> Status
+                                  </button>
+                                  <button
+                                    onClick={() => openDeleteModal(payout)}
+                                    className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
+                                    title="Delete Payout"
+                                  >
+                                    <FaTrash /> Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" className="px-6 py-12 text-center">
+                              <div className="text-gray-500">
+                                <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {searchTerm || statusFilter !== 'all' ? (
+                                  'No payouts match your filters'
+                                ) : (
+                                  'No payouts found. Create your first payout.'
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <div className="flex flex-col md:flex-row items-center justify-between">
+                        <div className="text-sm text-gray-700 mb-4 md:mb-0">
+                          Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to{' '}
+                          <span className="font-medium">
+                            {Math.min(indexOfLastItem, filteredPayouts.length)}
+                          </span> of{' '}
+                          <span className="font-medium">{filteredPayouts.length}</span> results
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Previous
+                          </button>
+                          
+                          {/* Page Numbers */}
+                          <div className="flex space-x-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`px-3 py-1 text-sm font-medium rounded-md ${
+                                    currentPage === pageNum
+                                      ? 'bg-orange-500 text-white'
+                                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* View Payout Modal */}
+      {showViewModal && selectedPayout && (
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center p-4 z-[10000]">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Payout Details
+                  </h3>
+                  <p className="text-sm text-gray-500">ID: {selectedPayout.payoutId}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedPayout.status)}`}>
+                    {getStatusIcon(selectedPayout.status)}
+                    <span className="ml-2">{selectedPayout.status}</span>
+                  </span>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Basic Information</h4>
+                  <dl className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Payout ID</dt>
+                      <dd className="col-span-2 text-sm text-gray-900 font-mono">{selectedPayout.payoutId}</dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Affiliate</dt>
+                      <dd className="col-span-2 text-sm text-gray-900">
+                        {selectedPayout.affiliate?.firstName} {selectedPayout.affiliate?.lastName}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Email</dt>
+                      <dd className="col-span-2 text-sm text-gray-900">{selectedPayout.affiliate?.email}</dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Affiliate Code</dt>
+                      <dd className="col-span-2 text-sm text-gray-900 font-mono">{selectedPayout.affiliate?.affiliateCode || 'N/A'}</dd>
+                    </div>
+                  </dl>
+                </div>
+                
+                {/* Payment Information */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Payment Information</h4>
+                  <dl className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Amount</dt>
+                      <dd className="col-span-2 text-sm text-gray-900 font-medium">
+                        {formatCurrency(selectedPayout.amount, selectedPayout.currency)}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Net Amount</dt>
+                      <dd className="col-span-2 text-sm text-gray-900">
+                        {formatCurrency(selectedPayout.netAmount, selectedPayout.currency)}
+                      </dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
+                      <dd className="col-span-2 text-sm text-gray-900 capitalize">{selectedPayout.paymentMethod}</dd>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <dt className="text-sm font-medium text-gray-500">Payout Type</dt>
+                      <dd className="col-span-2 text-sm text-gray-900 capitalize">{selectedPayout.payoutType}</dd>
+                    </div>
+                  </dl>
+                </div>
+                
+                {/* Commission Breakdown */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Commission Breakdown</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedPayout.commissionBreakdown && Object.entries(selectedPayout.commissionBreakdown).map(([key, value]) => (
+                      <div key={key} className={`bg-gray-50 p-3 rounded-md ${value > 0 ? 'border border-green-200' : ''}`}>
+                        <div className="text-xs text-gray-500">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </div>
+                        <div className={`text-sm font-medium ${value > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                          {formatCurrency(value, selectedPayout.currency)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Timestamps */}
+                <div className="md:col-span-2">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Timestamps</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-xs text-gray-500">Requested</div>
+                      <div className="text-sm font-medium text-gray-900">{formatDate(selectedPayout.requestedAt)}</div>
+                    </div>
+                    {selectedPayout.processedAt && (
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-xs text-gray-500">Processed</div>
+                        <div className="text-sm font-medium text-gray-900">{formatDate(selectedPayout.processedAt)}</div>
+                      </div>
+                    )}
+                    {selectedPayout.completedAt && (
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-xs text-gray-500">Completed</div>
+                        <div className="text-sm font-medium text-gray-900">{formatDate(selectedPayout.completedAt)}</div>
+                      </div>
+                    )}
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <div className="text-xs text-gray-500">Created</div>
+                      <div className="text-sm font-medium text-gray-900">{formatDate(selectedPayout.createdAt)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Additional Information */}
+              {selectedPayout.failureReason && (
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <h4 className="text-md font-medium text-red-800 mb-2">Failure Reason</h4>
+                  <p className="text-sm text-red-700">{selectedPayout.failureReason}</p>
+                  {selectedPayout.retryAttempt > 0 && (
+                    <p className="text-sm text-red-700 mt-1">
+                      Retry Attempt: {selectedPayout.retryAttempt} / {selectedPayout.maxRetries || 3}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Fees */}
+              {(selectedPayout.fees && Object.values(selectedPayout.fees).some(fee => fee > 0)) && (
+                <div className="mt-6">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Fees & Deductions</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(selectedPayout.fees).map(([key, value]) => (
+                      <div key={key} className={`bg-gray-50 p-3 rounded-md ${value > 0 ? 'border border-red-200' : ''}`}>
+                        <div className="text-xs text-gray-500">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                        </div>
+                        <div className={`text-sm font-medium ${value > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                          {formatCurrency(value, selectedPayout.currency)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Payment Details */}
+              {selectedPayout.paymentDetails && (
+                <div className="mt-6">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">Payment Details</h4>
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {JSON.stringify(selectedPayout.paymentDetails, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-between">
+                <button
+                  onClick={() => openStatusModal(selectedPayout)}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                >
+                  <FaEdit /> Update Status
+                </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedPayout.payoutId);
+                      toast.success('Payout ID copied to clipboard');
+                    }}
+                    className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Copy ID
+                  </button>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Status Change Toast */}
-      {showStatusToast && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
-          {statusToastMessage}
+      {/* Update Status Modal */}
+      {showStatusModal && selectedPayout && (
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center p-4 z-[10000]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Update Payout Status</h3>
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Payout ID: {selectedPayout.payoutId}</p>
+            </div>
+            
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    New Status *
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    {statusOptions.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setStatusUpdateData(prev => ({ ...prev, status: option.value }))}
+                        className={`flex flex-col items-center justify-center p-3 rounded-md border ${
+                          statusUpdateData.status === option.value
+                            ? 'border-orange-500 bg-orange-50'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className={`text-lg mb-1 ${option.color}`}>
+                          {getStatusIcon(option.value)}
+                        </div>
+                        <span className={`text-xs font-medium ${option.color}`}>
+                          {option.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Transaction ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={statusUpdateData.transactionId}
+                    onChange={(e) => setStatusUpdateData(prev => ({ ...prev, transactionId: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Enter transaction/reference ID"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={statusUpdateData.notes}
+                    onChange={(e) => setStatusUpdateData(prev => ({ ...prev, notes: e.target.value }))}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Add any notes about this status change..."
+                  />
+                </div>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-sm font-medium text-blue-800">Current Status</h4>
+                      <div className="mt-1 text-sm text-blue-700">
+                        {selectedPayout.status} - Last updated: {formatDate(selectedPayout.updatedAt)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowStatusModal(false)}
+                  className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleStatusUpdate}
+                  disabled={loading || !statusUpdateData.status}
+                  className="px-4 py-2 bg-orange-500 text-white font-medium rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Updating...' : 'Update Status'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Payout Details Modal */}
-      {showPayoutDetails && selectedPayout && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-semibold text-gray-900">Payout Details - {selectedPayout.payoutId}</h3>
-              <button onClick={closePayoutDetails} className="text-gray-400 hover:text-gray-500">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedPayout && (
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center p-4 z-[10000]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Delete Payout</h3>
             </div>
-
-            <div className="px-6 py-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Affiliate Information */}
-                <div className="bg-gray-50 p-4 rounded-lg shadow-inner">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Affiliate Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Name:</span>
-                      <span className="font-medium">
-                        {selectedPayout.affiliate?.firstName} {selectedPayout.affiliate?.lastName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Email:</span>
-                      <span className="font-medium">{selectedPayout.affiliate?.email}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Affiliate Code:</span>
-                      <span className="font-medium">{selectedPayout.affiliate?.affiliateCode}</span>
-                    </div>
-                  </div>
+            
+            <div className="px-6 py-4">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                 </div>
-
-                {/* Payout Summary */}
-                <div className="bg-gray-50 p-4 rounded-lg shadow-inner">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Payout Summary</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(selectedPayout.status)}`}>
-                        {selectedPayout.status}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Amount:</span>
-                      <span className="font-medium">{formatCurrency(selectedPayout.amount, selectedPayout.currency)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Net Amount:</span>
-                      <span className="font-medium">{formatCurrency(selectedPayout.netAmount, selectedPayout.currency)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Fees:</span>
-                      <span className="font-medium">{formatCurrency(selectedPayout.totalFees, selectedPayout.currency)}</span>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">
+                  Delete Payout {selectedPayout.payoutId}?
+                </h4>
+                <p className="text-sm text-gray-500 mb-4">
+                  This action cannot be undone. This will permanently delete the payout and all associated data.
+                </p>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-red-800">Warning</h4>
+                    <div className="mt-1 text-sm text-red-700">
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Payout record will be permanently deleted</li>
+                        <li>Transaction history will be lost</li>
+                        <li>This action cannot be reversed</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Payment Details */}
-              <div className="bg-gray-50 p-4 rounded-lg shadow-inner mb-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Payment Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Payment Method:</span>
-                    <span className="font-medium">{getPaymentMethodDisplay(selectedPayout.paymentMethod)}</span>
+              
+              <div className="bg-gray-50 p-4 rounded-md mb-4">
+                <h5 className="text-sm font-medium text-gray-700 mb-2">Payout Details</h5>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-gray-500">Affiliate:</div>
+                  <div className="text-gray-900 font-medium">
+                    {selectedPayout.affiliate?.firstName} {selectedPayout.affiliate?.lastName}
                   </div>
-                  {selectedPayout.paymentDetails?.[selectedPayout.paymentMethod] && (
-                    Object.entries(selectedPayout.paymentDetails[selectedPayout.paymentMethod]).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span className="text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
-                        <span className="font-medium">{value || 'N/A'}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Timeline */}
-              <div className="bg-gray-50 p-4 rounded-lg shadow-inner">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Timeline</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Requested:</span>
-                    <span className="font-medium">{formatDate(selectedPayout.requestedAt)}</span>
+                  <div className="text-gray-500">Amount:</div>
+                  <div className="text-gray-900 font-medium">
+                    {formatCurrency(selectedPayout.amount, selectedPayout.currency)}
                   </div>
-                  {selectedPayout.processedAt && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Processed:</span>
-                      <span className="font-medium">{formatDate(selectedPayout.processedAt)}</span>
-                    </div>
-                  )}
-                  {selectedPayout.completedAt && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Completed:</span>
-                      <span className="font-medium">{formatDate(selectedPayout.completedAt)}</span>
-                    </div>
-                  )}
-                  {selectedPayout.estimatedCompletionDate && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Estimated Completion:</span>
-                      <span className="font-medium">{formatDate(selectedPayout.estimatedCompletionDate)}</span>
-                    </div>
-                  )}
+                  <div className="text-gray-500">Status:</div>
+                  <div className="text-gray-900 font-medium">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeColor(selectedPayout.status)}`}>
+                      {selectedPayout.status}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end sticky bottom-0">
-              <button
-                onClick={closePayoutDetails}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-400 focus:outline-none transition-colors duration-200"
-              >
-                Close
-              </button>
+            
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeletePayout}
+                  disabled={loading}
+                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Deleting...' : 'Delete Payout'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

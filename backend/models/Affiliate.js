@@ -147,27 +147,20 @@ const affiliateSchema = new mongoose.Schema({
     referredUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
     },
     sourceId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true // This can be depositId, betId, withdrawalId, etc.
     },
     sourceType: {
       type: String,
-      required: true
     },
     
     // Commission calculation details
     commissionRate: {
       type: Number,
-      required: true,
-      min: 0
     },
     sourceAmount: {
       type: Number,
-      required: true,
-      min: 0 // Original amount that commission was calculated from
     },
     calculatedAmount: {
       type: Number,

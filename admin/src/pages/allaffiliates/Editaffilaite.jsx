@@ -27,7 +27,21 @@ const Editaffilaite = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
-  const [balanceForm, setBalanceForm] = useState({ amount: '', type: 'bonus', description: '', reason: '' });
+  
+  // Separate state for add balance form
+  const [addBalanceForm, setAddBalanceForm] = useState({ 
+    amount: '', 
+    type: 'bonus', 
+    description: '' 
+  });
+  
+  // Separate state for deduct balance form
+  const [deductBalanceForm, setDeductBalanceForm] = useState({ 
+    amount: '', 
+    reason: '', 
+    description: '' 
+  });
+  
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [performanceData, setPerformanceData] = useState(null);
@@ -169,9 +183,9 @@ const Editaffilaite = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${base_url}/api/admin/affiliates/${id}/balance/add`, {
-        amount: parseFloat(balanceForm.amount),
-        type: balanceForm.type,
-        description: balanceForm.description
+        amount: parseFloat(addBalanceForm.amount),
+        type: addBalanceForm.type,
+        description: addBalanceForm.description
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
@@ -180,7 +194,8 @@ const Editaffilaite = () => {
 
       if (response.data) {
         toast.success('Balance added successfully');
-        setBalanceForm({ amount: '', type: 'bonus', description: '', reason: '' });
+        // Clear only the add balance form
+        setAddBalanceForm({ amount: '', type: 'bonus', description: '' });
         fetchAffiliateDetails();
         fetchBalanceInfo();
       }
@@ -195,9 +210,9 @@ const Editaffilaite = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${base_url}/api/admin/affiliates/${id}/balance/deduct`, {
-        amount: parseFloat(balanceForm.amount),
-        reason: balanceForm.reason,
-        description: balanceForm.description
+        amount: parseFloat(deductBalanceForm.amount),
+        reason: deductBalanceForm.reason,
+        description: deductBalanceForm.description
       }, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
@@ -206,7 +221,8 @@ const Editaffilaite = () => {
 
       if (response.data) {
         toast.success('Balance deducted successfully');
-        setBalanceForm({ amount: '', type: 'bonus', description: '', reason: '' });
+        // Clear only the deduct balance form
+        setDeductBalanceForm({ amount: '', reason: '', description: '' });
         fetchAffiliateDetails();
         fetchBalanceInfo();
       }
@@ -670,7 +686,7 @@ const Editaffilaite = () => {
                           <span className="font-medium text-green-600">{formatCurrency(selectedAffiliate.totalEarnings || 0)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Pending Earnings:</span>
+                          <span className="text-gray-600">Balance:</span>
                           <span className="font-medium text-yellow-600">{formatCurrency(selectedAffiliate.pendingEarnings || 0)}</span>
                         </div>
                         <div className="flex justify-between">
@@ -736,8 +752,8 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          value={balanceForm.amount}
-                          onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
+                          value={addBalanceForm.amount}
+                          onChange={(e) => setAddBalanceForm({...addBalanceForm, amount: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                           placeholder="Enter amount"
                           required
@@ -746,8 +762,8 @@ const Editaffilaite = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                         <select
-                          value={balanceForm.type}
-                          onChange={(e) => setBalanceForm({...balanceForm, type: e.target.value})}
+                          value={addBalanceForm.type}
+                          onChange={(e) => setAddBalanceForm({...addBalanceForm, type: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
                           <option value="bonus">Bonus</option>
@@ -758,8 +774,8 @@ const Editaffilaite = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <textarea
-                          value={balanceForm.description}
-                          onChange={(e) => setBalanceForm({...balanceForm, description: e.target.value})}
+                          value={addBalanceForm.description}
+                          onChange={(e) => setAddBalanceForm({...addBalanceForm, description: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                           rows="2"
                           placeholder="Description for this transaction"
@@ -784,8 +800,8 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                         <input
                           type="number"
-                          value={balanceForm.amount}
-                          onChange={(e) => setBalanceForm({...balanceForm, amount: e.target.value})}
+                          value={deductBalanceForm.amount}
+                          onChange={(e) => setDeductBalanceForm({...deductBalanceForm, amount: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                           placeholder="Enter amount"
                           required
@@ -795,8 +811,8 @@ const Editaffilaite = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
                         <input
                           type="text"
-                          value={balanceForm.reason}
-                          onChange={(e) => setBalanceForm({...balanceForm, reason: e.target.value})}
+                          value={deductBalanceForm.reason}
+                          onChange={(e) => setDeductBalanceForm({...deductBalanceForm, reason: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                           placeholder="Reason for deduction"
                           required
@@ -805,8 +821,8 @@ const Editaffilaite = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <textarea
-                          value={balanceForm.description}
-                          onChange={(e) => setBalanceForm({...balanceForm, description: e.target.value})}
+                          value={deductBalanceForm.description}
+                          onChange={(e) => setDeductBalanceForm({...deductBalanceForm, description: e.target.value})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                           rows="2"
                           placeholder="Additional details"
