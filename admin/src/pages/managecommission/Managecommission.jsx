@@ -1001,7 +1001,7 @@ const Managecommission = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">{affiliate.pendingEarnings?.toFixed(2) || 0} BDT</div>
-                            <div className="text-xs text-gray-500">Commission: {(affiliate.commissionRate * 100).toFixed(0)}%</div>
+                            <div className="text-xs text-gray-500">Commission: {(affiliate.commissionRate).toFixed(0)}%</div>
                             {affiliate.minusBalance > 0 && (
                               <div className="text-xs text-red-500 font-medium">
                                 Minus Balance: {affiliate.minusBalance} BDT

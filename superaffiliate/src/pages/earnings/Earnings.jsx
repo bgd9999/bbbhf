@@ -516,7 +516,7 @@ const Earnings = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Commission Rate</h3>
-                  <p className="text-2xl font-bold">{(earningsData.commissionRate * 100).toFixed(1)}%</p>
+                  <p className="text-2xl font-bold">{(earningsData.commissionRate).toFixed(1)}%</p>
                   <p className="text-xs text-gray-500">Per successful referral</p>
                 </div>
               </div>
