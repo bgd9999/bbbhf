@@ -367,9 +367,6 @@ const Dashboard = () => {
                   <FiRefreshCw className={loading ? 'animate-spin' : ''} />
                   {loading ? 'Loading...' : 'Refresh'}
                 </button>
-                <div className="text-sm text-gray-600">
-                  Last updated: {new Date().toLocaleTimeString()}
-                </div>
               </div>
             </div>
 

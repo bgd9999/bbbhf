@@ -60,6 +60,23 @@ const Withdraw = () => {
     const wageringNeed = parseFloat(userData.waigeringneed) || 0;
     const totalBet = parseFloat(userData.total_bet) || 0;
     
+    // Check for special case: depositamount > 0 and waigeringneed = 0
+    if (depositAmount > 0 && wageringNeed === 0) {
+      // Apply 1.1x wagering requirement
+      const requiredWager = depositAmount * 1.1;
+      const remainingWager = Math.max(0, requiredWager - totalBet);
+      const isCompleted = remainingWager <= 0;
+      
+      return {
+        required: requiredWager,
+        completed: totalBet,
+        remaining: remainingWager,
+        isCompleted: isCompleted,
+        isSpecialCase: true // Flag to identify this special case
+      };
+    }
+    
+    // Original logic for other cases
     const requiredWager = depositAmount * wageringNeed;
     const remainingWager = Math.max(0, requiredWager - totalBet);
     const isCompleted = remainingWager <= 0;
@@ -68,7 +85,8 @@ const Withdraw = () => {
       required: requiredWager,
       completed: totalBet,
       remaining: remainingWager,
-      isCompleted: isCompleted
+      isCompleted: isCompleted,
+      isSpecialCase: false
     };
   };
 
@@ -220,10 +238,15 @@ const Withdraw = () => {
     }
 
     // Check wagering requirements
-    if (userData?.depositamount && userData?.waigeringneed) {
+    if (userData?.depositamount && userData?.depositamount > 0) {
       const wageringReq = calculateWageringRequirements(userData);
       if (!wageringReq.isCompleted) {
-        errors.wagering = `You need to wager ৳${wageringReq.remaining.toLocaleString()} more before withdrawing. Required: ৳${wageringReq.required.toLocaleString()}, Wagered: ৳${wageringReq.completed.toLocaleString()}`;
+        // Special case message
+        if (wageringReq.isSpecialCase) {
+          errors.wagering = `You need to wager ৳${wageringReq.remaining.toLocaleString()} more before withdrawing. Required: 1.1x deposit (৳${wageringReq.required.toLocaleString()}), Wagered: ৳${wageringReq.completed.toLocaleString()}`;
+        } else {
+          errors.wagering = `You need to wager ৳${wageringReq.remaining.toLocaleString()} more before withdrawing. Required: ৳${wageringReq.required.toLocaleString()}, Wagered: ৳${wageringReq.completed.toLocaleString()}`;
+        }
       }
     }
 
@@ -448,7 +471,7 @@ const Withdraw = () => {
             </div>
 
             {/* Wagering Requirement Alert */}
-            {(userData?.depositamount && userData?.waigeringneed && !wageringInfo.isCompleted) && (
+            {(userData?.depositamount && userData?.depositamount > 0 && !wageringInfo.isCompleted) && (
               <div className="bg-gradient-to-r from-[#2a1f1f] to-[#3a2f2f] rounded-[2px] p-4 md:p-6 mb-6 md:mb-8 border border-[#3a2f2f] shadow-lg">
                 <div className="flex items-center mb-3">
                   <svg
@@ -466,16 +489,20 @@ const Withdraw = () => {
                     />
                   </svg>
                   <h3 className="text-base md:text-lg font-semibold text-[#e6db74]">
-                    Wagering Requirement Pending
+                    {wageringInfo.isSpecialCase ? "1.1x Wagering Requirement Pending" : "Wagering Requirement Pending"}
                   </h3>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm md:text-base text-[#a8b9c6]">
-                    You need to complete wagering requirements before you can withdraw.
+                    {wageringInfo.isSpecialCase 
+                      ? "You need to complete 1.1x wagering requirement before you can withdraw."
+                      : "You need to complete wagering requirements before you can withdraw."}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-3">
                     <div className="bg-[#1a1f1f] p-3 rounded-lg">
-                      <p className="text-xs md:text-sm text-[#8a9ba8]">Required Wagering</p>
+                      <p className="text-xs md:text-sm text-[#8a9ba8]">
+                        {wageringInfo.isSpecialCase ? "Required (1.1x)" : "Required Wagering"}
+                      </p>
                       <p className="text-base md:text-lg font-bold text-white">
                         ৳{wageringInfo.required.toLocaleString()}
                       </p>
@@ -662,7 +689,9 @@ const Withdraw = () => {
                         )}
                         {!formErrors.wagering && !formErrors.bonusWagering && !wageringInfo.isCompleted && (
                           <p className="text-xs md:text-sm text-[#ff6b6b]">
-                            You need to complete wagering requirements before withdrawing.
+                            {wageringInfo.isSpecialCase 
+                              ? "You need to complete 1.1x wagering requirement before withdrawing."
+                              : "You need to complete wagering requirements before withdrawing."}
                           </p>
                         )}
                       </div>
@@ -845,7 +874,9 @@ const Withdraw = () => {
                           }
                         >
                           {!wageringInfo.isCompleted ? (
-                            "Complete Wagering Requirements First"
+                            wageringInfo.isSpecialCase 
+                              ? "Complete 1.1x Wagering Requirements First" 
+                              : "Complete Wagering Requirements First"
                           ) : isProcessing ? (
                             <>
                               <svg
@@ -961,18 +992,22 @@ const Withdraw = () => {
                       <span className="text-[#3a8a6f] mr-2">•</span>
                       <span>Percent charge: {activeMethod?.percentCharge || 0}%</span>
                     </li>
-                    {userData?.depositamount && userData?.waigeringneed && (
+                    {userData?.depositamount && userData?.depositamount > 0 && (
                       <>
                         <li className="flex items-start">
                           <span className="text-[#3a8a6f] mr-2">•</span>
                           <span>
-                            Wagering requirement: {userData.waigeringneed}x deposit amount
+                            {userData.waigeringneed === 0 
+                              ? "Wagering requirement: 1.1x deposit amount (Special case)"
+                              : `Wagering requirement: ${userData.waigeringneed}x deposit amount`}
                           </span>
                         </li>
                         <li className="flex items-start">
                           <span className="text-[#3a8a6f] mr-2">•</span>
                           <span>
-                            Required wagering: ৳{(userData.depositamount * userData.waigeringneed).toLocaleString()}
+                            Required wagering: ৳{(userData.waigeringneed === 0 
+                              ? userData.depositamount * 1.1 
+                              : userData.depositamount * userData.waigeringneed).toLocaleString()}
                           </span>
                         </li>
                         <li className="flex items-start">

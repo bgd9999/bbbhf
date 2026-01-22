@@ -18,7 +18,6 @@ import {
   FaMobileAlt
 } from 'react-icons/fa';
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
-
 import { GiMoneyStack } from 'react-icons/gi';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -358,32 +357,32 @@ const Payout = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       completed: { 
-        color: 'bg-green-100 text-green-800 border border-green-200', 
+        color: 'bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-400 border border-green-500/30', 
         icon: FaCheckCircle,
         label: 'Completed'
       },
       processing: { 
-        color: 'bg-blue-100 text-blue-800 border border-blue-200', 
+        color: 'bg-gradient-to-r from-blue-500/20 to-cyan-600/20 text-blue-400 border border-blue-500/30', 
         icon: FaClock,
         label: 'Processing'
       },
       pending: { 
-        color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', 
+        color: 'bg-gradient-to-r from-amber-500/20 to-yellow-600/20 text-amber-400 border border-amber-500/30', 
         icon: FaClock,
         label: 'Pending'
       },
       failed: { 
-        color: 'bg-red-100 text-red-800 border border-red-200', 
+        color: 'bg-gradient-to-r from-red-500/20 to-pink-600/20 text-red-400 border border-red-500/30', 
         icon: FaTimesCircle,
         label: 'Failed'
       },
       cancelled: { 
-        color: 'bg-gray-100 text-gray-800 border border-gray-200', 
+        color: 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-400 border border-gray-500/30', 
         icon: FaTimesCircle,
         label: 'Cancelled'
       },
       on_hold: { 
-        color: 'bg-orange-100 text-orange-800 border border-orange-200', 
+        color: 'bg-gradient-to-r from-orange-500/20 to-red-600/20 text-orange-400 border border-orange-500/30', 
         icon: FaExclamationTriangle,
         label: 'On Hold'
       }
@@ -393,7 +392,7 @@ const Payout = () => {
     const IconComponent = config.icon;
     
     return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${config.color}`}>
         <IconComponent className="w-3 h-3 mr-1" />
         {config.label}
       </span>
@@ -478,7 +477,6 @@ const Payout = () => {
   };
 
   const exportToCSV = () => {
-    // Implement CSV export functionality
     toast.success('Payout history exported successfully!');
   };
 
@@ -559,19 +557,19 @@ const Payout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#000514] text-white font-sans">
         <Header toggleSidebar={toggleSidebar} />
         <div className="flex pt-16">
           <Sidebar isOpen={isSidebarOpen} />
           <main className={`flex-1 p-8 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+              <div className="h-8 bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-gray-700 rounded w-1/2 mb-8"></div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white rounded-lg p-6 shadow">
-                    <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <div className="h-6 bg-gray-700 rounded w-1/2 mb-4"></div>
+                    <div className="h-4 bg-gray-700 rounded w-3/4"></div>
                   </div>
                 ))}
               </div>
@@ -583,530 +581,541 @@ const Payout = () => {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-[#000514] text-white font-sans selection:bg-cyan-500 selection:text-black">
+      <style>{`
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000514; }
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #22d3ee 0%, #2563eb 100%);
+          border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+      `}</style>
+      
+      {/* Background Decoration */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+      </div>
+
       <Header toggleSidebar={toggleSidebar} />
       
-      <div className="flex pt-[70px]">
+      <div className="flex pt-[10vh] relative z-10">
         <Sidebar isOpen={isSidebarOpen} />
         
-        <main className={`flex-1 font-poppins transition-all duration-300 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
-          <div className="p-6 lg:p-8">
-            {/* Header Section */}
-            <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h1 className="text-2xl font-[600] text-gray-900 flex items-center">
-                    <FaBangladeshiTakaSign className="text-green-600 mr-3" />
+        <main className={`transition-all duration-500 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto h-[90vh] ${
+          isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'
+        }`}>
+          {/* Header Section */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight mb-2 flex items-center">
+                  <FaBangladeshiTakaSign className="text-cyan-400 mr-3" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
                     Payout Management
-                  </h1>
-                  <p className="text-gray-600 mt-2 text-[13px]">
-                    Request and track your affiliate earnings in BDT
+                  </span>
+                </h1>
+                <p className="text-gray-400 mt-2 text-sm md:text-base">
+                  Request and track your affiliate earnings in BDT
+                </p>
+              </div>
+              <div className="flex items-center space-x-4 mt-4 lg:mt-0">
+                <button
+                  onClick={() => setShowRequestModal(true)}
+                  disabled={!canRequestPayout || configuredMethods.length === 0}
+                  className={`px-6 py-3 rounded-tl-md rounded-br-md font-bold uppercase tracking-widest text-sm transition-all duration-300 ${
+                    canRequestPayout && configuredMethods.length > 0
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:brightness-110 hover:scale-[1.02] cursor-pointer shadow-[0_0_20px_rgba(34,211,238,0.3)]' 
+                      : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <span>Request Payout</span>
+                </button>
+              </div>
+            </div>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-500 to-blue-600 mt-4 rounded-full"></div>
+          </div>
+
+          {/* Notice Marquee */}
+          <div className="relative flex items-center justify-center overflow-hidden mb-8">
+            <div className="marquee-container overflow-hidden w-full">
+              <marquee className="border border-white/10 font-medium p-3 text-sm md:text-base bg-gradient-to-r from-cyan-500/10 to-blue-600/10">
+                💰 IMPORTANT NOTICE: Every night at 12:00 AM (midnight), your commission earnings will be automatically added to your account!
+              </marquee>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all group backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Available Balance</p>
+                  <p className="text-2xl md:text-3xl font-bold mb-2">
+                    {formatCurrency(payoutData.availableBalance)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Ready for payout
                   </p>
                 </div>
-                <div className="flex items-center space-x-4 mt-4 lg:mt-0">
-                  <button
-                    onClick={() => setShowRequestModal(true)}
-                    disabled={!canRequestPayout || configuredMethods.length === 0}
-                    className={`px-6 py-3 rounded-[5px] font-[500] text-[14px] cursor-pointer transition-colors flex items-center space-x-2 ${
-                      canRequestPayout && configuredMethods.length > 0
-                        ? 'bg-green-500 text-white hover:bg-green-600 '
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>Request Payout</span>
-                  </button>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <FaMoneyBillWave className="text-cyan-400 text-xl" />
                 </div>
               </div>
             </div>
- 
-              <div className="relative flex items-center justify-center overflow-hidden">
-                
-                {/* Marquee text */}
-                <div className="marquee-container overflow-hidden w-full">
-                   <marquee className="border-[1px] border-gray-200 font-medium p-[10px] text-lg">
-                        💰 IMPORTANT NOTICE:  Every night at 12:00 AM (midnight), your commission earnings will be automatically added to your account!
-                      </marquee>
-                </div>
-              </div>
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Available Balance</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(payoutData.availableBalance)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Ready for payout
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-500 rounded-xl">
-                    <FaMoneyBillWave className="text-white text-xl" />
-                  </div>
-                </div>
-              </div>
 
-              <div className="bg-white rounded-[5px] p-6  border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Paid</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(payoutData.totalPaid)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Lifetime earnings
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-500 rounded-xl">
-                    <FaCheckCircle className="text-white text-xl" />
-                  </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all group backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Total Paid</p>
+                  <p className="text-2xl md:text-3xl font-bold mb-2">
+                    {formatCurrency(payoutData.totalPaid)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Lifetime earnings
+                  </p>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Minimum Payout</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(payoutData.minimumPayout)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Required amount
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-500 rounded-xl">
-                    <FaBangladeshiTakaSign className="text-white text-xl" />
-                  </div>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <FaCheckCircle className="text-cyan-400 text-xl" />
                 </div>
-              </div>
-
-              {/* <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Next Payout Date</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatDate(payoutData.nextPayoutDate).split(',')[0]}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2 flex items-center">
-                      <FaCalendarAlt className="mr-1" />
-                      Automatic payout
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-100 rounded-xl">
-                    <FaHistory className="text-orange-600 text-xl" />
-                  </div>
-                </div>
-              </div> */}
-            </div>
-
-            {/* Payout Eligibility Alert */}
-            <div className={`rounded-[5px] p-6 mb-8 ${
-              canRequestPayout && configuredMethods.length > 0
-                ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white'
-                : configuredMethods.length === 0
-                ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white'
-                : 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white'
-            }`}>
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    {canRequestPayout && configuredMethods.length > 0 ? (
-                      <FaMoneyBillWave className="text-2xl" />
-                    ) : configuredMethods.length === 0 ? (
-                      <FaExclamationTriangle className="text-2xl" />
-                    ) : (
-                      <FaExclamationTriangle className="text-2xl" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      {canRequestPayout && configuredMethods.length > 0
-                        ? 'Ready for Payout!'
-                        : configuredMethods.length === 0
-                        ? 'Payment Method Required'
-                        : 'Minimum Not Reached'
-                      }
-                    </h3>
-                    <p className="opacity-90">
-                      {canRequestPayout && configuredMethods.length > 0
-                        ? `You can request up to ${formatCurrency(payoutData.availableBalance)}`
-                        : configuredMethods.length === 0
-                        ? 'Please configure your payment method in profile settings'
-                        : `You need ${formatCurrency(payoutData.minimumPayout - payoutData.availableBalance)} more to request a payout`
-                      }
-                    </p>
-                  </div>
-                </div>
-                {canRequestPayout && configuredMethods.length > 0 && (
-                  <button
-                    onClick={() => setShowRequestModal(true)}
-                    className="mt-4 lg:mt-0 px-6 py-3 bg-white text-green-600 rounded-[5px] text-[14px]  font-[500] hover:bg-gray-100 transition-colors"
-                  >
-                    Request Payout Now
-                  </button>
-                )}
-                {configuredMethods.length === 0 && (
-                  <button
-                    onClick={() => window.location.href = '/affiliate/profile'}
-                    className="mt-4 lg:mt-0 px-6 py-3 bg-white text-red-600 rounded-[5px] text-[14px] font-[500] cursor-pointer transition-colors "
-                  >
-                    Configure Payment Method
-                  </button>
-                )}
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="bg-white rounded-[5px]  border border-gray-200 mb-8">
-              <div className="border-b border-gray-200">
-                <nav className="flex space-x-8 px-6">
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'history'
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 cursor-pointer hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Payout History
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('stats')}
-                    className={`py-4 px-1 border-b-2 cursor-pointer font-medium text-sm ${
-                      activeTab === 'stats'
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Statistics
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('methods')}
-                    className={`py-4 px-1 border-b-2 cursor-pointer font-medium text-sm ${
-                      activeTab === 'methods'
-                        ? 'border-green-500 text-green-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Payment Methods
-                  </button>
-                </nav>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all group backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Minimum Payout</p>
+                  <p className="text-2xl md:text-3xl font-bold mb-2">
+                    {formatCurrency(payoutData.minimumPayout)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Required amount
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg group-hover:scale-110 transition-transform">
+                  <FaBangladeshiTakaSign className="text-cyan-400 text-xl" />
+                </div>
               </div>
+            </div>
+          </div>
 
-              <div className="p-6">
-                {activeTab === 'history' && (
-                  <div>
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-4 lg:mb-0">
+          {/* Payout Eligibility Alert */}
+          <div className={`rounded-xl p-6 mb-8 backdrop-blur-sm ${
+            canRequestPayout && configuredMethods.length > 0
+              ? 'bg-gradient-to-r from-green-500/20 to-teal-600/20 border border-green-500/30'
+              : configuredMethods.length === 0
+              ? 'bg-gradient-to-r from-red-500/20 to-pink-600/20 border border-red-500/30'
+              : 'bg-gradient-to-r from-amber-500/20 to-orange-600/20 border border-amber-500/30'
+          }`}>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white/10 rounded-lg">
+                  {canRequestPayout && configuredMethods.length > 0 ? (
+                    <FaMoneyBillWave className="text-2xl text-green-400" />
+                  ) : configuredMethods.length === 0 ? (
+                    <FaExclamationTriangle className="text-2xl text-red-400" />
+                  ) : (
+                    <FaExclamationTriangle className="text-2xl text-amber-400" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold uppercase tracking-widest">
+                    {canRequestPayout && configuredMethods.length > 0
+                      ? 'Ready for Payout!'
+                      : configuredMethods.length === 0
+                      ? 'Payment Method Required'
+                      : 'Minimum Not Reached'
+                    }
+                  </h3>
+                  <p className="text-gray-400">
+                    {canRequestPayout && configuredMethods.length > 0
+                      ? `You can request up to ${formatCurrency(payoutData.availableBalance)}`
+                      : configuredMethods.length === 0
+                      ? 'Please configure your payment method in profile settings'
+                      : `You need ${formatCurrency(payoutData.minimumPayout - payoutData.availableBalance)} more to request a payout`
+                    }
+                  </p>
+                </div>
+              </div>
+              {canRequestPayout && configuredMethods.length > 0 && (
+                <button
+                  onClick={() => setShowRequestModal(true)}
+                  className="mt-4 lg:mt-0 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-black rounded-tl-md rounded-br-md text-sm font-bold uppercase tracking-widest hover:brightness-110 hover:scale-[1.02] transition-all duration-300"
+                >
+                  Request Payout Now
+                </button>
+              )}
+              {configuredMethods.length === 0 && (
+                <button
+                  onClick={() => window.location.href = '/affiliate/profile'}
+                  className="mt-4 lg:mt-0 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-tl-md rounded-br-md text-sm font-bold uppercase tracking-widest hover:brightness-110 hover:scale-[1.02] transition-all duration-300"
+                >
+                  Configure Payment Method
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="bg-white/5 border border-white/10 rounded-xl mb-8 backdrop-blur-sm">
+            <div className="border-b border-white/10">
+              <nav className="flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`py-4 px-1 border-b-2 font-bold uppercase tracking-widest text-sm ${
+                    activeTab === 'history'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-gray-400 cursor-pointer hover:text-gray-300 hover:border-gray-300/30'
+                  }`}
+                >
+                  Payout History
+                </button>
+                <button
+                  onClick={() => setActiveTab('stats')}
+                  className={`py-4 px-1 border-b-2 cursor-pointer font-bold uppercase tracking-widest text-sm ${
+                    activeTab === 'stats'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300/30'
+                  }`}
+                >
+                  Statistics
+                </button>
+                <button
+                  onClick={() => setActiveTab('methods')}
+                  className={`py-4 px-1 border-b-2 cursor-pointer font-bold uppercase tracking-widest text-sm ${
+                    activeTab === 'methods'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300/30'
+                  }`}
+                >
+                  Payment Methods
+                </button>
+              </nav>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'history' && (
+                <div>
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <h2 className="text-2xl font-bold uppercase tracking-widest mb-4 lg:mb-0">
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
                         Payout History
-                      </h2>
+                      </span>
+                    </h2>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Search Input */}
+                      <div className="relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search by ID or method..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent w-full sm:w-64 text-white placeholder-gray-500"
+                        />
+                      </div>
                       
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Search Input */}
-                        <div className="relative">
-                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            placeholder="Search by ID or method..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full sm:w-64"
-                          />
-                        </div>
-                        
-                        {/* Status Filter */}
-                        <select
-                          value={statusFilter}
-                          onChange={(e) => setStatusFilter(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                          <option value="all">All Status</option>
-                          <option value="completed">Completed</option>
-                          <option value="processing">Processing</option>
-                          <option value="pending">Pending</option>
-                          <option value="failed">Failed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                      {/* Status Filter */}
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
+                      >
+                        <option value="all" className="bg-[#000514]">All Status</option>
+                        <option value="completed" className="bg-[#000514]">Completed</option>
+                        <option value="processing" className="bg-[#000514]">Processing</option>
+                        <option value="pending" className="bg-[#000514]">Pending</option>
+                        <option value="failed" className="bg-[#000514]">Failed</option>
+                        <option value="cancelled" className="bg-[#000514]">Cancelled</option>
+                      </select>
 
-                        {/* Date Filter */}
-                        <select
-                          value={dateFilter}
-                          onChange={(e) => setDateFilter(e.target.value)}
-                          className="px-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                          <option value="all">All Time</option>
-                          <option value="week">Last 7 Days</option>
-                          <option value="month">Last 30 Days</option>
-                          <option value="quarter">Last 90 Days</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      {filteredPayouts.length === 0 ? (
-                        <div className="p-8 text-center">
-                          <p className="text-gray-600">No payout history found</p>
-                          <p className="text-gray-500 text-sm mt-2">
-                            {searchTerm || statusFilter !== 'all' || dateFilter !== 'all' 
-                              ? 'Try adjusting your filters' 
-                              : 'Your payout history will appear here'}
-                          </p>
-                        </div>
-                      ) : (
-                        <table className="w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Payout ID
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Amount
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Method
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Requested Date
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredPayouts.map((payout) => (
-                              <tr key={payout._id} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-medium text-gray-900 font-mono">
-                                    {payout.payoutId}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm font-semibold text-gray-900">
-                                    {formatCurrency(payout.netAmount || payout.amount)}
-                                  </div>
-                                  {payout.netAmount !== payout.amount && (
-                                    <div className="text-xs text-gray-500 line-through">
-                                      {formatCurrency(payout.amount)}
-                                    </div>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex items-center space-x-2">
-                                    {getPaymentMethodIcon(payout.paymentMethod)}
-                                    <span className="text-sm text-gray-900 capitalize">
-                                      {getPaymentMethodDisplay(payout.paymentMethod)}
-                                    </span>
-                                  </div>
-                                  {payout.paymentDetails && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      {payout.paymentDetails[payout.paymentMethod]?.phoneNumber || 
-                                       payout.paymentDetails[payout.paymentMethod]?.walletAddress?.slice(0, 8) + '...'}
-                                    </div>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  {getStatusBadge(payout.status)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-900">
-                                    {formatDate(payout.requestedAt)}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <div className="flex items-center space-x-3">
-                                    <button
-                                      onClick={() => viewPayoutDetails(payout)}
-                                      className="text-green-600 hover:text-green-900 transition-colors flex items-center space-x-1"
-                                    >
-                                      <FaEye className="w-4 h-4" />
-                                      <span>View</span>
-                                    </button>
-                                    {payout.status === 'pending' && (
-                                      <button
-                                        onClick={() => handleCancelPayout(payout._id)}
-                                        className="text-red-600 hover:text-red-900 transition-colors flex items-center space-x-1"
-                                      >
-                                        <FaTimesCircle className="w-4 h-4" />
-                                        <span>Cancel</span>
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
+                      {/* Date Filter */}
+                      <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
+                      >
+                        <option value="all" className="bg-[#000514]">All Time</option>
+                        <option value="week" className="bg-[#000514]">Last 7 Days</option>
+                        <option value="month" className="bg-[#000514]">Last 30 Days</option>
+                        <option value="quarter" className="bg-[#000514]">Last 90 Days</option>
+                      </select>
                     </div>
                   </div>
-                )}
 
-                {activeTab === 'stats' && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Payout Statistics</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Summary</h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Total Payouts:</span>
-                            <span className="font-semibold">{payoutData.payoutStats.totalPayouts || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Completed:</span>
-                            <span className="font-semibold text-green-600">{payoutData.payoutStats.completedPayouts || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Pending:</span>
-                            <span className="font-semibold text-yellow-600">{payoutData.payoutStats.pendingPayouts || 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Total Amount:</span>
-                            <span className="font-semibold">{formatCurrency(payoutData.payoutStats.totalAmount || 0)}</span>
-                          </div>
-                        </div>
+                  <div className="overflow-x-auto">
+                    {filteredPayouts.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <p className="text-gray-400">No payout history found</p>
+                        <p className="text-gray-500 text-sm mt-2">
+                          {searchTerm || statusFilter !== 'all' || dateFilter !== 'all' 
+                            ? 'Try adjusting your filters' 
+                            : 'Your payout history will appear here'}
+                        </p>
                       </div>
-
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Averages</h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Average Payout:</span>
-                            <span className="font-semibold">{formatCurrency(payoutData.payoutStats.averagePayout || 0)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Largest Payout:</span>
-                            <span className="font-semibold">{formatCurrency(payoutData.payoutStats.largestPayout || 0)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Success Rate:</span>
-                            <span className="font-semibold">
-                              {payoutData.payoutStats.totalPayouts ? 
-                                Math.round(((payoutData.payoutStats.completedPayouts || 0) / payoutData.payoutStats.totalPayouts) * 100) : 0
-                              }%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                        <div className="space-y-3">
-                          <button
-                            onClick={() => setShowRequestModal(true)}
-                            disabled={!canRequestPayout}
-                            className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                              canRequestPayout
-                                ? 'bg-green-500 text-white hover:bg-green-600'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                          >
-                            Request Payout
-                          </button>
-                          <button
-                            onClick={exportToCSV}
-                            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            Export History
-                          </button>
-                          <button
-                            onClick={() => window.location.href = '/affiliate/profile'}
-                            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            Manage Payment Methods
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'methods' && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Methods</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {payoutData.paymentMethods.map((method) => (
-                        <div
-                          key={method.id}
-                          className={`border-2 rounded-xl p-6 transition-all ${
-                            method.isConfigured
-                              ? method.isPrimary
-                                ? 'border-green-500 bg-green-50'
-                                : 'border-gray-300 bg-white hover:border-gray-400'
-                              : 'border-gray-200 bg-gray-100'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center space-x-3">
-                              <div className={`p-2 rounded-lg ${
-                                method.isConfigured
-                                  ? method.isPrimary
-                                    ? 'bg-green-100 text-green-600'
-                                    : 'bg-gray-100 text-gray-600'
-                                  : 'bg-gray-200 text-gray-400'
-                              }`}>
-                                {React.createElement(method.icon, { className: "w-5 h-5" })}
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-900">{method.name}</h3>
-                                <p className={`text-sm ${
-                                  method.isConfigured ? 'text-green-600' : 'text-gray-500'
-                                }`}>
-                                  {method.isConfigured ? 'Configured' : 'Not Configured'}
-                                  {method.isPrimary && ' • Primary'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {method.isConfigured && (
-                            <div className="space-y-2 text-sm text-gray-600">
-                              {method.details.phoneNumber && (
-                                <div className="flex justify-between">
-                                  <span>Phone:</span>
-                                  <span className="font-mono">{method.details.phoneNumber}</span>
+                    ) : (
+                      <table className="w-full">
+                        <thead className="bg-white/5">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Payout ID
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Amount
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Method
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Status
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Requested Date
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/10">
+                          {filteredPayouts.map((payout) => (
+                            <tr key={payout._id} className="hover:bg-white/5 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-white font-mono">
+                                  {payout.payoutId}
                                 </div>
-                              )}
-                              {method.details.walletAddress && (
-                                <div className="flex justify-between">
-                                  <span>Wallet:</span>
-                                  <span className="font-mono text-xs">
-                                    {method.details.walletAddress.slice(0, 8)}...{method.details.walletAddress.slice(-8)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-semibold text-green-400">
+                                  {formatCurrency(payout.netAmount || payout.amount)}
+                                </div>
+                                {payout.netAmount !== payout.amount && (
+                                  <div className="text-xs text-gray-500 line-through">
+                                    {formatCurrency(payout.amount)}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center space-x-2">
+                                  {getPaymentMethodIcon(payout.paymentMethod)}
+                                  <span className="text-sm text-white capitalize">
+                                    {getPaymentMethodDisplay(payout.paymentMethod)}
                                   </span>
                                 </div>
-                              )}
-                              {method.details.accountType && (
-                                <div className="flex justify-between">
-                                  <span>Type:</span>
-                                  <span className="capitalize">{method.details.accountType}</span>
+                                {payout.paymentDetails && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {payout.paymentDetails[payout.paymentMethod]?.phoneNumber || 
+                                     payout.paymentDetails[payout.paymentMethod]?.walletAddress?.slice(0, 8) + '...'}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {getStatusBadge(payout.status)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-300">
+                                  {formatDate(payout.requestedAt)}
                                 </div>
-                              )}
-                            </div>
-                          )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex items-center space-x-3">
+                                  <button
+                                    onClick={() => viewPayoutDetails(payout)}
+                                    className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center space-x-1"
+                                  >
+                                    <FaEye className="w-4 h-4" />
+                                    <span>View</span>
+                                  </button>
+                                  {payout.status === 'pending' && (
+                                    <button
+                                      onClick={() => handleCancelPayout(payout._id)}
+                                      className="text-red-400 hover:text-red-300 transition-colors flex items-center space-x-1"
+                                    >
+                                      <FaTimesCircle className="w-4 h-4" />
+                                      <span>Cancel</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                </div>
+              )}
 
-                          <div className="mt-4">
-                            <button
-                              onClick={() => window.location.href = '/affiliate/profile'}
-                              className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                                method.isConfigured
-                                  ? 'bg-gray-500 text-white hover:bg-gray-600'
-                                  : 'bg-green-500 text-white hover:bg-green-600'
-                              }`}
-                            >
-                              {method.isConfigured ? 'Edit' : 'Configure'}
-                            </button>
-                          </div>
+              {activeTab === 'stats' && (
+                <div>
+                  <h2 className="text-2xl font-bold uppercase tracking-widest mb-6">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                      Payout Statistics
+                    </span>
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+                      <h3 className="text-lg font-bold uppercase tracking-widest mb-4 text-gray-300">Summary</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Total Payouts:</span>
+                          <span className="font-semibold">{payoutData.payoutStats.totalPayouts || 0}</span>
                         </div>
-                      ))}
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Completed:</span>
+                          <span className="font-semibold text-green-400">{payoutData.payoutStats.completedPayouts || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Pending:</span>
+                          <span className="font-semibold text-amber-400">{payoutData.payoutStats.pendingPayouts || 0}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Total Amount:</span>
+                          <span className="font-semibold">{formatCurrency(payoutData.payoutStats.totalAmount || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+                      <h3 className="text-lg font-bold uppercase tracking-widest mb-4 text-gray-300">Averages</h3>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Average Payout:</span>
+                          <span className="font-semibold">{formatCurrency(payoutData.payoutStats.averagePayout || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Largest Payout:</span>
+                          <span className="font-semibold">{formatCurrency(payoutData.payoutStats.largestPayout || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Success Rate:</span>
+                          <span className="font-semibold">
+                            {payoutData.payoutStats.totalPayouts ? 
+                              Math.round(((payoutData.payoutStats.completedPayouts || 0) / payoutData.payoutStats.totalPayouts) * 100) : 0
+                            }%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+                      <h3 className="text-lg font-bold uppercase tracking-widest mb-4 text-gray-300">Quick Actions</h3>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowRequestModal(true)}
+                          disabled={!canRequestPayout}
+                          className={`w-full px-4 py-2 rounded-tl-md rounded-br-md font-bold uppercase tracking-widest text-sm transition-all duration-300 ${
+                            canRequestPayout
+                              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:brightness-110 hover:scale-[1.02] cursor-pointer' 
+                              : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                          }`}
+                        >
+                          Request Payout
+                        </button>
+                        <button
+                          onClick={exportToCSV}
+                          className="w-full px-4 py-2 border border-white/10 text-gray-300 rounded-tl-md rounded-br-md hover:bg-white/5 transition-all font-bold uppercase tracking-widest text-sm"
+                        >
+                          Export History
+                        </button>
+                        <button
+                          onClick={() => window.location.href = '/affiliate/profile'}
+                          className="w-full px-4 py-2 border border-white/10 text-gray-300 rounded-tl-md rounded-br-md hover:bg-white/5 transition-all font-bold uppercase tracking-widest text-sm"
+                        >
+                          Manage Payment Methods
+                        </button>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {activeTab === 'methods' && (
+                <div>
+                  <h2 className="text-2xl font-bold uppercase tracking-widest mb-6">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                      Payment Methods
+                    </span>
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {payoutData.paymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className={`border-2 rounded-xl p-6 transition-all backdrop-blur-sm ${
+                          method.isConfigured
+                            ? method.isPrimary
+                              ? 'border-cyan-500 bg-gradient-to-br from-cyan-500/10 to-blue-600/10'
+                              : 'border-white/10 bg-white/5 hover:border-cyan-500/50'
+                            : 'border-white/5 bg-white/5 opacity-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-lg ${
+                              method.isConfigured
+                                ? method.isPrimary
+                                  ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white'
+                                  : 'bg-white/10 text-cyan-400'
+                                : 'bg-white/5 text-gray-400'
+                            }`}>
+                              {React.createElement(method.icon, { className: "w-5 h-5" })}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-white">{method.name}</h3>
+                              <p className={`text-sm ${
+                                method.isConfigured ? 'text-cyan-400' : 'text-gray-500'
+                              }`}>
+                                {method.isConfigured ? 'Configured' : 'Not Configured'}
+                                {method.isPrimary && ' • Primary'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {method.isConfigured && (
+                          <div className="space-y-2 text-sm text-gray-400">
+                            {method.details.phoneNumber && (
+                              <div className="flex justify-between">
+                                <span>Phone:</span>
+                                <span className="font-mono">{method.details.phoneNumber}</span>
+                              </div>
+                            )}
+                            {method.details.walletAddress && (
+                              <div className="flex justify-between">
+                                <span>Wallet:</span>
+                                <span className="font-mono text-xs">
+                                  {method.details.walletAddress.slice(0, 8)}...{method.details.walletAddress.slice(-8)}
+                                </span>
+                              </div>
+                            )}
+                            {method.details.accountType && (
+                              <div className="flex justify-between">
+                                <span>Type:</span>
+                                <span className="capitalize">{method.details.accountType}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="mt-4">
+                          <button
+                            onClick={() => window.location.href = '/affiliate/profile'}
+                            className={`w-full px-4 py-2 rounded-tl-md rounded-br-md font-bold uppercase tracking-widest text-sm transition-all duration-300 ${
+                              method.isConfigured
+                                ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:brightness-110'
+                                : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black hover:brightness-110 hover:scale-[1.02] cursor-pointer'
+                            }`}
+                          >
+                            {method.isConfigured ? 'Edit' : 'Configure'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -1114,14 +1123,14 @@ const Payout = () => {
 
       {/* Payout Request Modal */}
       {showRequestModal && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] font-poppins bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-[10px] max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-[rgba(0,5,20,0.8)] backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+          <div className="bg-[#000514] border border-white/10 rounded-xl max-w-md w-full backdrop-blur-sm">
+            <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">Request Payout</h3>
+                <h3 className="text-xl font-bold uppercase tracking-widest text-white">Request Payout</h3>
                 <button
                   onClick={() => setShowRequestModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-300"
                 >
                   <FaTimesCircle className="text-xl" />
                 </button>
@@ -1130,7 +1139,7 @@ const Payout = () => {
 
             <form onSubmit={handlePayoutRequest} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
                   Payout Amount (BDT)
                 </label>
                 <div className="relative">
@@ -1140,7 +1149,7 @@ const Payout = () => {
                     value={payoutRequest.amount}
                     onChange={(e) => setPayoutRequest(prev => ({ ...prev, amount: e.target.value }))}
                     placeholder={`Minimum: ${formatCurrency(payoutData.minimumPayout)}`}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
                     min={payoutData.minimumPayout}
                     max={payoutData.availableBalance}
                     step="0.01"
@@ -1153,46 +1162,46 @@ const Payout = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
                   Payment Method
                 </label>
                 <select
                   value={payoutRequest.paymentMethod}
                   onChange={(e) => setPayoutRequest(prev => ({ ...prev, paymentMethod: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
                   required
                 >
-                  <option value="">Select payment method</option>
+                  <option value="" className="bg-[#000514]">Select payment method</option>
                   {payoutData.paymentMethods
                     .filter(method => method.isConfigured)
                     .map(method => (
-                      <option key={method.id} value={method.id}>
+                      <option key={method.id} value={method.id} className="bg-[#000514]">
                         {method.name} {method.isPrimary && '(Primary)'}
                       </option>
                     ))
                   }
                 </select>
                 {configuredMethods.length === 0 && (
-                  <p className="text-xs text-red-500 mt-1">
+                  <p className="text-xs text-red-400 mt-1">
                     No payment methods configured. Please set up a payment method in your profile.
                   </p>
                 )}
               </div>
 
               {payoutRequest.paymentMethod && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Payment Details:</p>
+                <div className="bg-white/5 p-4 rounded-lg border border-white/10">
+                  <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Payment Details:</p>
                   {payoutData.paymentMethods
                     .find(m => m.id === payoutRequest.paymentMethod)
                     ?.details.phoneNumber && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-300">
                       Phone: {payoutData.paymentMethods.find(m => m.id === payoutRequest.paymentMethod)?.details.phoneNumber}
                     </p>
                   )}
                   {payoutData.paymentMethods
                     .find(m => m.id === payoutRequest.paymentMethod)
                     ?.details.walletAddress && (
-                    <p className="text-sm text-gray-600 break-all">
+                    <p className="text-sm text-gray-300 break-all">
                       Wallet: {payoutData.paymentMethods.find(m => m.id === payoutRequest.paymentMethod)?.details.walletAddress}
                     </p>
                   )}
@@ -1200,7 +1209,7 @@ const Payout = () => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -1208,7 +1217,7 @@ const Payout = () => {
                   onChange={(e) => setPayoutRequest(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Any additional notes for this payout request..."
                   rows="3"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
                 />
               </div>
 
@@ -1216,14 +1225,14 @@ const Payout = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-green-500 text-white rounded-[5px] cursor-pointer text-[15px] font-[500] hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-black rounded-tl-md rounded-br-md font-bold uppercase tracking-widest text-sm hover:brightness-110 hover:scale-[1.02] transition-all duration-300 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Request'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowRequestModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-[5px] text-[15px] cursor-pointer font-[500] hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-700 text-white rounded-tl-md rounded-br-md font-bold uppercase tracking-widest text-sm hover:bg-gray-600 transition-all"
                 >
                   Cancel
                 </button>
@@ -1235,14 +1244,14 @@ const Payout = () => {
 
       {/* Payout Details Modal */}
       {showDetailsModal && selectedPayout && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.4)] bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-[rgba(0,5,20,0.8)] backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+          <div className="bg-[#000514] border border-white/10 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-sm">
+            <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">Payout Details</h3>
+                <h3 className="text-xl font-bold uppercase tracking-widest text-white">Payout Details</h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-300"
                 >
                   <FaTimesCircle className="text-xl" />
                 </button>
@@ -1252,32 +1261,32 @@ const Payout = () => {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Transaction Information</h4>
+                  <h4 className="text-lg font-bold uppercase tracking-widest mb-4 text-gray-300">Transaction Information</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Payout ID</label>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Payout ID</label>
                       <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-sm text-gray-900 font-mono">
+                        <p className="text-sm text-white font-mono">
                           {selectedPayout.payoutId}
                         </p>
                         <button
                           onClick={() => copyToClipboard(selectedPayout.payoutId, 'Payout ID')}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 hover:text-gray-300"
                         >
                           <FaCopy className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Transaction ID</label>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Transaction ID</label>
                       <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-sm text-gray-900 font-mono">
+                        <p className="text-sm text-white font-mono">
                           {selectedPayout.transactionId || 'Pending assignment'}
                         </p>
                         {selectedPayout.transactionId && (
                           <button
                             onClick={() => copyToClipboard(selectedPayout.transactionId, 'Transaction ID')}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 hover:text-gray-300"
                           >
                             <FaCopy className="w-4 h-4" />
                           </button>
@@ -1285,8 +1294,8 @@ const Payout = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Amount</label>
-                      <p className="text-lg font-semibold text-green-600 mt-1">
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Amount</label>
+                      <p className="text-lg font-semibold text-green-400 mt-1">
                         {formatCurrency(selectedPayout.netAmount || selectedPayout.amount)}
                       </p>
                       {selectedPayout.netAmount !== selectedPayout.amount && (
@@ -1296,21 +1305,21 @@ const Payout = () => {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Status</label>
                       <div className="mt-1">
                         {getStatusBadge(selectedPayout.status)}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Requested Date</label>
-                      <p className="text-sm text-gray-900 mt-1">
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Requested Date</label>
+                      <p className="text-sm text-gray-300 mt-1">
                         {formatDate(selectedPayout.requestedAt)}
                       </p>
                     </div>
                     {selectedPayout.completedAt && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Completed Date</label>
-                        <p className="text-sm text-gray-900 mt-1">
+                        <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Completed Date</label>
+                        <p className="text-sm text-gray-300 mt-1">
                           {formatDate(selectedPayout.completedAt)}
                         </p>
                       </div>
@@ -1319,13 +1328,13 @@ const Payout = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Payment Details</h4>
+                  <h4 className="text-lg font-bold uppercase tracking-widest mb-4 text-gray-300">Payment Details</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Payment Method</label>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Payment Method</label>
                       <div className="flex items-center space-x-2 mt-1">
                         {getPaymentMethodIcon(selectedPayout.paymentMethod)}
-                        <p className="text-sm text-gray-900 capitalize">
+                        <p className="text-sm text-white capitalize">
                           {getPaymentMethodDisplay(selectedPayout.paymentMethod)}
                         </p>
                       </div>
@@ -1334,9 +1343,9 @@ const Payout = () => {
                       <>
                         {selectedPayout.paymentDetails[selectedPayout.paymentMethod]?.phoneNumber && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Phone Number</label>
                             <div className="flex items-center space-x-2 mt-1">
-                              <p className="text-sm text-gray-900">
+                              <p className="text-sm text-white">
                                 {selectedPayout.paymentDetails[selectedPayout.paymentMethod].phoneNumber}
                               </p>
                               <button
@@ -1344,7 +1353,7 @@ const Payout = () => {
                                   selectedPayout.paymentDetails[selectedPayout.paymentMethod].phoneNumber, 
                                   'Phone number'
                                 )}
-                                className="text-gray-400 hover:text-gray-600"
+                                className="text-gray-400 hover:text-gray-300"
                               >
                                 <FaCopy className="w-4 h-4" />
                               </button>
@@ -1353,9 +1362,9 @@ const Payout = () => {
                         )}
                         {selectedPayout.paymentDetails[selectedPayout.paymentMethod]?.walletAddress && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Wallet Address</label>
+                            <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Wallet Address</label>
                             <div className="flex items-center space-x-2 mt-1">
-                              <p className="text-sm text-gray-900 font-mono break-all">
+                              <p className="text-sm text-white font-mono break-all">
                                 {selectedPayout.paymentDetails[selectedPayout.paymentMethod].walletAddress}
                               </p>
                               <button
@@ -1363,7 +1372,7 @@ const Payout = () => {
                                   selectedPayout.paymentDetails[selectedPayout.paymentMethod].walletAddress, 
                                   'Wallet address'
                                 )}
-                                className="text-gray-400 hover:text-gray-600"
+                                className="text-gray-400 hover:text-gray-300"
                               >
                                 <FaCopy className="w-4 h-4" />
                               </button>
@@ -1372,8 +1381,8 @@ const Payout = () => {
                         )}
                         {selectedPayout.paymentDetails[selectedPayout.paymentMethod]?.accountType && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Account Type</label>
-                            <p className="text-sm text-gray-900 mt-1 capitalize">
+                            <label className="block text-sm font-bold uppercase tracking-widest text-gray-400">Account Type</label>
+                            <p className="text-sm text-white mt-1 capitalize">
                               {selectedPayout.paymentDetails[selectedPayout.paymentMethod].accountType}
                             </p>
                           </div>
@@ -1384,12 +1393,12 @@ const Payout = () => {
 
                   {selectedPayout.includedEarnings && selectedPayout.includedEarnings.length > 0 && (
                     <div className="mt-6">
-                      <h5 className="text-md font-medium text-gray-900 mb-3">Included Earnings</h5>
+                      <h5 className="text-md font-bold uppercase tracking-widest mb-3 text-gray-400">Included Earnings</h5>
                       <div className="space-y-2">
                         {selectedPayout.includedEarnings.slice(0, 5).map((earning, index) => (
                           <div key={index} className="flex justify-between text-sm">
-                            <span className="text-gray-600">{earning.description || 'Commission'}</span>
-                            <span className="font-medium">{formatCurrency(earning.amount)}</span>
+                            <span className="text-gray-400">{earning.description || 'Commission'}</span>
+                            <span className="font-medium text-green-400">{formatCurrency(earning.amount)}</span>
                           </div>
                         ))}
                         {selectedPayout.includedEarnings.length > 5 && (
@@ -1404,10 +1413,10 @@ const Payout = () => {
               </div>
 
               {selectedPayout.status === 'pending' && (
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="mt-6 p-4 bg-gradient-to-r from-amber-500/10 to-yellow-600/10 border border-amber-500/20 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <FaClock className="text-yellow-600" />
-                    <p className="text-sm text-yellow-800">
+                    <FaClock className="text-amber-400" />
+                    <p className="text-sm text-amber-300">
                       This payout request is being processed. It usually takes 2-3 business days to complete.
                     </p>
                   </div>
@@ -1415,10 +1424,10 @@ const Payout = () => {
               )}
 
               {selectedPayout.status === 'processing' && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-600/10 border border-blue-500/20 rounded-lg">
                   <div className="flex items-center space-x-2">
-                    <FaClock className="text-blue-600" />
-                    <p className="text-sm text-blue-800">
+                    <FaClock className="text-blue-400" />
+                    <p className="text-sm text-blue-300">
                       Your payout is being processed. You should receive it within 24-48 hours.
                     </p>
                   </div>
@@ -1426,7 +1435,7 @@ const Payout = () => {
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-white/10 bg-white/5 rounded-b-xl">
               <div className="flex justify-between items-center">
                 {selectedPayout.status === 'pending' && (
                   <button
@@ -1434,7 +1443,7 @@ const Payout = () => {
                       handleCancelPayout(selectedPayout._id);
                       setShowDetailsModal(false);
                     }}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-tl-md rounded-br-md hover:brightness-110 transition-all font-bold uppercase tracking-widest text-sm"
                   >
                     Cancel Payout
                   </button>
@@ -1442,7 +1451,7 @@ const Payout = () => {
                 <div className="ml-auto">
                   <button
                     onClick={() => setShowDetailsModal(false)}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                    className="px-6 py-2 bg-gray-700 text-white rounded-tl-md rounded-br-md hover:bg-gray-600 transition-all font-bold uppercase tracking-widest text-sm"
                   >
                     Close
                   </button>

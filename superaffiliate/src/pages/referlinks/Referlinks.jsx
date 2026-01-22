@@ -20,7 +20,9 @@ import {
   FaEnvelope,
   FaTimes,
   FaUsers,
-  FaMousePointer
+  FaMousePointer,
+  FaArrowUp,
+  FaArrowDown
 } from 'react-icons/fa';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -135,14 +137,14 @@ const Referlinks = () => {
               id: 4,
               name: 'Text Link',
               size: 'Text',
-              code: `<a href="${mainRegistrationLink}" target="_blank" style="color: #10B981; font-weight: bold; text-decoration: none;">Join the Best Betting Platform - Get Welcome Bonus!</a>`,
+              code: `<a href="${mainRegistrationLink}" target="_blank" style="color: #22d3ee; font-weight: bold; text-decoration: none;">Join the Best Betting Platform - Get Welcome Bonus!</a>`,
               imageUrl: null
             },
             {
               id: 5,
               name: 'Sports Text Link',
               size: 'Text',
-              code: `<a href="${sportsbookLink}" target="_blank" style="color: #10B981; font-weight: bold; text-decoration: none;">Live Sports Betting - Best Odds Available!</a>`,
+              code: `<a href="${sportsbookLink}" target="_blank" style="color: #22d3ee; font-weight: bold; text-decoration: none;">Live Sports Betting - Best Odds Available!</a>`,
               imageUrl: null
             }
           ],
@@ -226,7 +228,7 @@ const Referlinks = () => {
           id: 4,
           name: 'Text Link',
           size: 'Text',
-          code: `<a href="${mainRegistrationLink}" target="_blank" style="color: #10B981; font-weight: bold; text-decoration: none;">Join the Best Betting Platform - Get Welcome Bonus!</a>`,
+          code: `<a href="${mainRegistrationLink}" target="_blank" style="color: #22d3ee; font-weight: bold; text-decoration: none;">Join the Best Betting Platform - Get Welcome Bonus!</a>`,
           imageUrl: null
         }
       ],
@@ -325,11 +327,11 @@ const Referlinks = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      registration: 'bg-blue-100 text-blue-800',
-      deposit: 'bg-green-100 text-green-800',
-      sports: 'bg-orange-100 text-orange-800',
-      casino: 'bg-purple-100 text-purple-800',
-      general: 'bg-gray-100 text-gray-800'
+      registration: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+      deposit: 'bg-green-500/20 text-green-400 border border-green-500/30',
+      sports: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
+      casino: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+      general: 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
     };
     return colors[category] || colors.general;
   };
@@ -340,21 +342,21 @@ const Referlinks = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#000514]">
         <Header toggleSidebar={toggleSidebar} />
-        <div className="flex pt-16">
+        <div className="flex pt-[10vh]">
           <Sidebar isOpen={isSidebarOpen} />
-          <main className={`flex-1 p-8 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
+          <main className={`flex-1 p-6 ${isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'}`}>
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+              <div className="h-8 bg-white/10 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-white/10 rounded w-1/2 mb-8"></div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white rounded-lg p-6 shadow">
-                    <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
+                  <div key={i} className="bg-white/5 rounded-lg p-6">
+                    <div className="h-6 bg-white/10 rounded w-1/2 mb-4"></div>
                     <div className="space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-white/10 rounded w-3/4"></div>
+                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
                     </div>
                   </div>
                 ))}
@@ -367,448 +369,386 @@ const Referlinks = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#000514] text-white font-sans selection:bg-cyan-500 selection:text-black">
+      <style>{`
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000514; }
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #22d3ee 0%, #2563eb 100%);
+          border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+      `}</style>
+
+      {/* Background Decoration */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+      </div>
+
       <Header toggleSidebar={toggleSidebar} />
       
-      <div className="flex pt-[80px]">
+      <div className="flex pt-[10vh] relative z-10">
         <Sidebar isOpen={isSidebarOpen} />
         
-        <main className={`flex-1 font-poppins transition-all duration-300 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
-          <div className="p-6 lg:p-8">
-            {/* Header Section */}
-            <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'} p-4 md:p-6 lg:p-8 overflow-y-auto h-[90vh]`}>
+          {/* Header Section */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">
+                  <span className="text-gray-400">Referral</span>{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Links</span>
+                </h1>
+                <p className="text-gray-400 text-sm md:text-base mt-2">
+                  Share your affiliate links and track their performance
+                </p>
+              </div>
+          
+            </div>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-500 to-blue-600 mt-4 rounded-full"></div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-[600] text-gray-900">
-                    Affiliate Links & Creatives
-                  </h1>
-                  <p className="text-gray-600 mt-2 text-[13px]">
-                    Share your affiliate links and track their performance
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Clicks</h3>
+                  <p className="text-2xl md:text-3xl font-bold">
+                    {formatNumber(referralData.totalClicks)}
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Clicks</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatNumber(referralData.totalClicks)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-500 rounded-xl">
-                    <FaMousePointer className="text-white text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Your Affiliate Code</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1 font-mono">
-                      {referralData.affiliateCode}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-orange-500 rounded-xl">
-                    <FaCode className="text-white text-xl" />
-                  </div>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaMousePointer className="text-cyan-400 text-xl md:text-2xl" />
                 </div>
               </div>
             </div>
 
-            {/* Tabs Navigation */}
-            <div className="bg-white rounded-[5px] border border-gray-200 mb-8">
-              <div className="border-b border-gray-200">
-                <nav className="flex overflow-x-auto">
-                  {[
-                    { id: 'links', label: 'Affiliate Links', icon: FaLink },
-                    { id: 'performance', label: 'Performance Analytics', icon: FaChartLine },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center space-x-2 cursor-pointer px-6 py-4 border-b-2 transition-all duration-300 whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-green-500 text-green-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <tab.icon className={`text-lg ${activeTab === tab.id ? 'text-green-600' : 'text-gray-400'}`} />
-                      <span className="font-medium">{tab.label}</span>
-                    </button>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Tab Content */}
-              <div className="p-6">
-                {/* Affiliate Links Tab */}
-                {activeTab === 'links' && (
-                  <div className="space-y-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                      <h2 className="text-xl font-[600] text-gray-900">Your Affiliate Links</h2>
-                    </div>
-
-                    <div className="space-y-4">
-                      {referralData.referralLinks.map((link) => (
-                        <div key={link.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="font-semibold text-gray-900">{link.name}</h3>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(link.category)}`}>
-                                  {link.category}
-                                </span>
-                                {link.isActive && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Active
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-gray-600 text-sm mb-3">{link.description}</p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <span>Clicks: <strong>{formatNumber(link.clicks)}</strong></span>
-                                <span>Conversions: <strong>{formatNumber(link.conversions)}</strong></span>
-                                <span>Created: <strong>{new Date(link.createdAt).toLocaleDateString()}</strong></span>
-                              </div>
-                              <div className="mt-3 flex items-center space-x-2">
-                                <input
-                                  type="text"
-                                  value={link.url}
-                                  readOnly
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-mono"
-                                />
-                                <button
-                                  onClick={() => copyToClipboard(link.url, link.name)}
-                                  className={`p-2 rounded-[5px] transition-colors  ${
-                                    copiedLink === link.url 
-                                      ? 'bg-green-500 text-white' 
-                                      : 'bg-gray-200 text-gray-700 border-[1px] border-gray-200 hover:bg-gray-300'
-                                  }`}
-                                >
-                                  <FaCopy className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Marketing Creatives Tab */}
-                {activeTab === 'creatives' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-[600] text-gray-900">Marketing Creatives</h2>
-                      <p className="text-gray-600 mt-1 text-sm">Use these banners and text links on your website</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {referralData.creatives.map((creative, index) => (
-                        <div key={index} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-gray-900">
-                              {creative.name}
-                            </h3>
-                            <span className="text-sm text-gray-500">
-                              {creative.imageUrl ? 'Banner' : 'Text Link'}
-                            </span>
-                          </div>
-                          
-                          {creative.imageUrl && (
-                            <div className="mb-4 p-4 bg-white rounded-lg border border-gray-300">
-                              <div className={`bg-gray-200 flex items-center justify-center ${
-                                creative.size === '728x90' ? 'h-20' : 
-                                creative.size === '300x250' ? 'h-48' : 'h-10'
-                              }`}>
-                                <span className="text-gray-500 text-sm">Banner Preview: {creative.size}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                HTML Code
-                              </label>
-                              <div className="flex space-x-2">
-                                <input
-                                  type="text"
-                                  value={creative.code}
-                                  readOnly
-                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-mono"
-                                />
-                                <button
-                                  onClick={() => copyToClipboard(creative.code, 'HTML code')}
-                                  className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                                >
-                                  <FaCopy className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {creative.imageUrl && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Image URL
-                                </label>
-                                <div className="flex space-x-2">
-                                  <input
-                                    type="text"
-                                    value={creative.imageUrl}
-                                    readOnly
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-mono"
-                                  />
-                                  <button
-                                    onClick={() => copyToClipboard(creative.imageUrl, 'image URL')}
-                                    className="p-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                                  >
-                                    <FaCopy className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Performance Analytics Tab */}
-                {activeTab === 'performance' && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-[600] text-gray-900">Performance Analytics</h2>
-                      <p className="text-gray-600 mt-1 text-sm">Track how your affiliate links are performing</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                      <div className="bg-white rounded-xl p-6 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-4">Today</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Clicks:</span>
-                            <span className="font-semibold">{referralData.performance.today.clicks}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Conversions:</span>
-                            <span className="font-semibold">{referralData.performance.today.conversions}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-xl p-6 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-4">This Week</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Clicks:</span>
-                            <span className="font-semibold">{referralData.performance.week.clicks}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Conversions:</span>
-                            <span className="font-semibold">{referralData.performance.week.conversions}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-xl p-6 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-4">This Month</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Clicks:</span>
-                            <span className="font-semibold">{referralData.performance.month.clicks}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Conversions:</span>
-                            <span className="font-semibold">{referralData.performance.month.conversions}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-4">Link Performance</h3>
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-3 font-medium text-gray-700">Link Name</th>
-                              <th className="text-left py-3 font-medium text-gray-700">Clicks</th>
-                              <th className="text-left py-3 font-medium text-gray-700">Conversions</th>
-                              <th className="text-left py-3 font-medium text-gray-700">Conversion Rate</th>
-                              <th className="text-left py-3 font-medium text-gray-700">Performance</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {referralData.referralLinks.map((link) => (
-                              <tr key={link.id} className="border-b border-gray-100">
-                                <td className="py-3 text-gray-900">{link.name}</td>
-                                <td className="py-3 text-gray-600">{formatNumber(link.clicks)}</td>
-                                <td className="py-3 text-gray-600">{formatNumber(link.conversions)}</td>
-                                <td className="py-3 text-gray-600">
-                                  {link.clicks > 0 ? ((link.conversions / link.clicks) * 100).toFixed(2) : 0}%
-                                </td>
-                                <td className="py-3">
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className="bg-green-500 h-2 rounded-full" 
-                                      style={{ width: `${Math.min((link.conversions / Math.max(link.clicks, 1)) * 100, 100)}%` }}
-                                    ></div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* QR Code Modal */}
-            {showQRCode && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">QR Code</h3>
-                    <button
-                      onClick={() => setShowQRCode('')}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <FaTimes className="text-xl" />
-                    </button>
-                  </div>
-                  <div className="bg-gray-100 p-4 rounded-lg mb-4 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-48 h-48 bg-white border-4 border-gray-300 flex items-center justify-center mb-2">
-                        <span className="text-gray-500 text-sm">QR Code would appear here</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Scan to visit link</p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => copyToClipboard(showQRCode, 'URL')}
-                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      Copy URL
-                    </button>
-                    <button
-                      onClick={() => setShowQRCode('')}
-                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Your Affiliate Code</h3>
+                  <p className="text-2xl md:text-3xl font-bold font-mono text-cyan-400">
+                    {referralData.affiliateCode}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaCode className="text-cyan-400 text-xl md:text-2xl" />
                 </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Create Custom Link Modal */}
-            {showCreateModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold text-gray-900">Create Custom Affiliate Link</h3>
-                    <button
-                      onClick={() => setShowCreateModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <FaTimes className="text-xl" />
-                    </button>
+          {/* Tabs Navigation */}
+          <div className="bg-white/5 border border-white/10 rounded-xl mb-6 md:mb-8 backdrop-blur-sm">
+            <div className="border-b border-white/10">
+              <nav className="flex overflow-x-auto">
+                {[
+                  { id: 'links', label: 'Affiliate Links', icon: FaLink },
+                  { id: 'performance', label: 'Performance Analytics', icon: FaChartLine },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 cursor-pointer px-4 md:px-6 py-4 border-b-2 transition-all duration-300 whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'border-cyan-500 text-cyan-400 font-bold'
+                        : 'border-transparent text-gray-400 hover:text-cyan-300 hover:bg-white/5'
+                    }`}
+                  >
+                    <tab.icon className={`text-lg ${activeTab === tab.id ? 'text-cyan-400' : 'text-gray-500'}`} />
+                    <span className="font-bold uppercase tracking-widest text-sm">{tab.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-4 md:p-6">
+              {/* Affiliate Links Tab */}
+              {activeTab === 'links' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <h2 className="text-xl md:text-2xl font-bold uppercase tracking-widest">Your Affiliate Links</h2>
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Link Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={newLink.name}
-                        onChange={(e) => setNewLink(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="e.g., Sports Welcome Bonus"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Target Path *
-                      </label>
-                      <div className="flex items-center">
-                        <span className="text-gray-500 mr-2">{website_url}/</span>
-                        <input
-                          type="text"
-                          value={newLink.targetUrl}
-                          onChange={(e) => setNewLink(prev => ({ ...prev, targetUrl: e.target.value }))}
-                          placeholder="sports-welcome"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        />
+                    {referralData.referralLinks.map((link) => (
+                      <div key={link.id} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 hover:border-cyan-500/30 transition-all backdrop-blur-sm">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-bold text-gray-300">{link.name}</h3>
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${getCategoryColor(link.category)}`}>
+                                {link.category}
+                              </span>
+                              {link.isActive && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-green-500/20 text-green-400 border border-green-500/30">
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-400 text-sm mb-3">{link.description}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>Clicks: <strong className="text-cyan-400">{formatNumber(link.clicks)}</strong></span>
+                              <span>Conversions: <strong className="text-cyan-400">{formatNumber(link.conversions)}</strong></span>
+                              <span>Created: <strong className="text-cyan-400">{new Date(link.createdAt).toLocaleDateString()}</strong></span>
+                            </div>
+                            <div className="mt-3 flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={link.url}
+                                readOnly
+                                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-gray-300 text-sm font-mono"
+                              />
+                              <button
+                                onClick={() => copyToClipboard(link.url, link.name)}
+                                className={`p-2 rounded-md transition-all duration-300 ${
+                                  copiedLink === link.url 
+                                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black' 
+                                    : 'bg-white/10 text-gray-400 hover:bg-white/20 hover:text-white border border-white/10'
+                                }`}
+                              >
+                                <FaCopy className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Final URL: {website_url}/{newLink.targetUrl || 'your-path'}?aff={referralData.affiliateCode}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Category
-                      </label>
-                      <select
-                        value={newLink.category}
-                        onChange={(e) => setNewLink(prev => ({ ...prev, category: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="general">General</option>
-                        <option value="registration">Registration</option>
-                        <option value="deposit">Deposit</option>
-                        <option value="sports">Sportsbook</option>
-                        <option value="casino">Casino</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description (Optional)
-                      </label>
-                      <textarea
-                        value={newLink.description}
-                        onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Brief description of this link..."
-                        rows="3"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-3 mt-6">
-                    <button
-                      onClick={createCustomLink}
-                      className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
-                    >
-                      Create Link
-                    </button>
-                    <button
-                      onClick={() => setShowCreateModal(false)}
-                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
-                    >
-                      Cancel
-                    </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Performance Analytics Tab */}
+              {activeTab === 'performance' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-bold uppercase tracking-widest">Performance Analytics</h2>
+                    <p className="text-gray-400 text-sm mt-2">Track how your affiliate links are performing</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-sm">
+                      <h3 className="font-bold uppercase tracking-widest text-gray-400 mb-4">Today</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Clicks:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.today.clicks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Conversions:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.today.conversions}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-sm">
+                      <h3 className="font-bold uppercase tracking-widest text-gray-400 mb-4">This Week</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Clicks:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.week.clicks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Conversions:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.week.conversions}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-sm">
+                      <h3 className="font-bold uppercase tracking-widest text-gray-400 mb-4">This Month</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Clicks:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.month.clicks}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Conversions:</span>
+                          <span className="font-bold text-cyan-400">{referralData.performance.month.conversions}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-sm">
+                    <h3 className="font-bold uppercase tracking-widest text-gray-400 mb-4">Link Performance</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-3 font-bold uppercase tracking-widest text-xs text-gray-400">Link Name</th>
+                            <th className="text-left py-3 font-bold uppercase tracking-widest text-xs text-gray-400">Clicks</th>
+                            <th className="text-left py-3 font-bold uppercase tracking-widest text-xs text-gray-400">Conversions</th>
+                            <th className="text-left py-3 font-bold uppercase tracking-widest text-xs text-gray-400">Conversion Rate</th>
+                            <th className="text-left py-3 font-bold uppercase tracking-widest text-xs text-gray-400">Performance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {referralData.referralLinks.map((link) => (
+                            <tr key={link.id} className="border-b border-white/10 hover:bg-white/5">
+                              <td className="py-3 text-gray-300">{link.name}</td>
+                              <td className="py-3 text-cyan-400">{formatNumber(link.clicks)}</td>
+                              <td className="py-3 text-cyan-400">{formatNumber(link.conversions)}</td>
+                              <td className="py-3 text-cyan-400">
+                                {link.clicks > 0 ? ((link.conversions / link.clicks) * 100).toFixed(2) : 0}%
+                              </td>
+                              <td className="py-3">
+                                <div className="w-full bg-white/10 rounded-full h-2">
+                                  <div 
+                                    className="bg-gradient-to-r from-cyan-500 to-blue-600 h-2 rounded-full" 
+                                    style={{ width: `${Math.min((link.conversions / Math.max(link.clicks, 1)) * 100, 100)}%` }}
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+
+          {/* QR Code Modal */}
+          {showQRCode && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+              <div className="bg-[#000514] border border-cyan-500/30 rounded-xl p-6 max-w-sm w-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold uppercase tracking-widest">QR Code</h3>
+                  <button
+                    onClick={() => setShowQRCode('')}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FaTimes className="text-xl" />
+                  </button>
+                </div>
+                <div className="bg-white/5 p-4 rounded-lg mb-4 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-48 h-48 bg-white/10 border-2 border-cyan-500/30 flex items-center justify-center mb-2">
+                      <span className="text-gray-500 text-sm">QR Code would appear here</span>
+                    </div>
+                    <p className="text-sm text-gray-400">Scan to visit link</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => copyToClipboard(showQRCode, 'URL')}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold rounded-tl-md rounded-br-md hover:brightness-110 transition-all duration-300"
+                  >
+                    Copy URL
+                  </button>
+                  <button
+                    onClick={() => setShowQRCode('')}
+                    className="flex-1 px-4 py-2 bg-white/10 text-white font-bold rounded-tl-md rounded-br-md hover:bg-white/20 transition-all duration-300"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Create Custom Link Modal */}
+          {showCreateModal && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+              <div className="bg-[#000514] border border-cyan-500/30 rounded-xl p-6 max-w-md w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold uppercase tracking-widest">Create Custom Affiliate Link</h3>
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FaTimes className="text-xl" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Link Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newLink.name}
+                      onChange={(e) => setNewLink(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g., Sports Welcome Bonus"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Target Path *
+                    </label>
+                    <div className="flex items-center">
+                      <span className="text-gray-500 mr-2">{website_url}/</span>
+                      <input
+                        type="text"
+                        value={newLink.targetUrl}
+                        onChange={(e) => setNewLink(prev => ({ ...prev, targetUrl: e.target.value }))}
+                        placeholder="sports-welcome"
+                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
+                      />
+                    </div>
+                    <p className="text-xs text-cyan-400 mt-1">
+                      Final URL: {website_url}/{newLink.targetUrl || 'your-path'}?aff={referralData.affiliateCode}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={newLink.category}
+                      onChange={(e) => setNewLink(prev => ({ ...prev, category: e.target.value }))}
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
+                    >
+                      <option value="general" className="bg-[#000514]">General</option>
+                      <option value="registration" className="bg-[#000514]">Registration</option>
+                      <option value="deposit" className="bg-[#000514]">Deposit</option>
+                      <option value="sports" className="bg-[#000514]">Sportsbook</option>
+                      <option value="casino" className="bg-[#000514]">Casino</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={newLink.description}
+                      onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Brief description of this link..."
+                      rows="3"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={createCustomLink}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold rounded-tl-md rounded-br-md hover:brightness-110 transition-all duration-300"
+                  >
+                    Create Link
+                  </button>
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 bg-white/10 text-white font-bold rounded-tl-md rounded-br-md hover:bg-white/20 transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

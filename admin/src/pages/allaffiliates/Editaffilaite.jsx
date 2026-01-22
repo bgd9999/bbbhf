@@ -522,33 +522,6 @@ const Editaffilaite = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                        <select
-                          value={editForm.status}
-                          onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="active">Active</option>
-                          <option value="suspended">Suspended</option>
-                          <option value="banned">Banned</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Verification Status</label>
-                        <select
-                          value={editForm.verificationStatus}
-                          onChange={(e) => setEditForm({...editForm, verificationStatus: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="unverified">Unverified</option>
-                          <option value="pending">Pending</option>
-                          <option value="verified">Verified</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                      </div>
-                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Bet Commission Rate (%)</label>
                         <input
                           type="number"
@@ -583,18 +556,6 @@ const Editaffilaite = () => {
                           onChange={(e) => setEditForm({...editForm, cpaRate: parseFloat(e.target.value) || 0})}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Commission Type</label>
-                        <select
-                          value={editForm.commissionType}
-                          onChange={(e) => setEditForm({...editForm, commissionType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="revenue_share">Revenue Share</option>
-                          <option value="cpa">CPA</option>
-                          <option value="hybrid">Hybrid</option>
-                        </select>
                       </div>
                     </div>
                     <div className="flex justify-end space-x-3">

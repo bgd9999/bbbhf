@@ -17,7 +17,10 @@ import {
   FaSort,
   FaSortUp,
   FaSortDown,
-  FaTimes
+  FaTimes,
+  FaArrowUp,
+  FaArrowDown,
+  FaUsers
 } from 'react-icons/fa';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
@@ -163,7 +166,8 @@ const Referrals = () => {
     return new Intl.NumberFormat('en-BD', {
       style: 'currency',
       currency: 'BDT',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount || 0);
   };
 
@@ -189,16 +193,16 @@ const Referrals = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { color: 'bg-green-100 text-green-800', icon: FaUserCheck },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: FaUserClock },
-      inactive: { color: 'bg-gray-100 text-gray-800', icon: FaUserTimes }
+      active: { color: 'bg-green-500/20 text-green-400 border border-green-500/30', icon: FaUserCheck },
+      pending: { color: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30', icon: FaUserClock },
+      inactive: { color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30', icon: FaUserTimes }
     };
     
     const config = statusConfig[status] || statusConfig.pending;
     const IconComponent = config.icon;
     
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${config.color}`}>
         <IconComponent className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -215,8 +219,8 @@ const Referrals = () => {
   };
 
   const getSortIcon = (field) => {
-    if (sortField !== field) return <FaSort className="text-gray-400" />;
-    return sortDirection === 'asc' ? <FaSortUp className="text-green-600" /> : <FaSortDown className="text-green-600" />;
+    if (sortField !== field) return <FaSort className="text-gray-500" />;
+    return sortDirection === 'asc' ? <FaSortUp className="text-cyan-400" /> : <FaSortDown className="text-cyan-400" />;
   };
 
   const filteredAndSortedReferrals = referralsData.referrals
@@ -302,30 +306,30 @@ const Referrals = () => {
   };
 
   const getActivityLevel = (lastActivity) => {
-    if (!lastActivity) return { level: 'Unknown', color: 'text-gray-600' };
+    if (!lastActivity) return { level: 'Unknown', color: 'text-gray-500' };
     
     const daysSinceActivity = Math.floor((new Date() - new Date(lastActivity)) / (1000 * 60 * 60 * 24));
     
-    if (daysSinceActivity <= 1) return { level: 'High', color: 'text-green-600' };
-    if (daysSinceActivity <= 7) return { level: 'Medium', color: 'text-yellow-600' };
-    return { level: 'Low', color: 'text-red-600' };
+    if (daysSinceActivity <= 1) return { level: 'High', color: 'text-green-400' };
+    if (daysSinceActivity <= 7) return { level: 'Medium', color: 'text-yellow-400' };
+    return { level: 'Low', color: 'text-red-400' };
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#000514]">
         <Header toggleSidebar={toggleSidebar} />
-        <div className="flex pt-16">
+        <div className="flex pt-[10vh]">
           <Sidebar isOpen={isSidebarOpen} />
-          <main className={`flex-1 p-8 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
+          <main className={`flex-1 p-6 ${isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'}`}>
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+              <div className="h-8 bg-white/10 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-white/10 rounded w-1/2 mb-8"></div>
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="bg-white rounded-lg p-6 shadow">
-                    <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div key={i} className="bg-white/5 rounded-lg p-6">
+                    <div className="h-6 bg-white/10 rounded w-1/2 mb-4"></div>
+                    <div className="h-4 bg-white/10 rounded w-3/4"></div>
                   </div>
                 ))}
               </div>
@@ -337,310 +341,354 @@ const Referrals = () => {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen bg-[#000514] text-white font-sans selection:bg-cyan-500 selection:text-black">
+      <style>{`
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000514; }
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #22d3ee 0%, #2563eb 100%);
+          border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+      `}</style>
+
+      {/* Background Decoration */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+      </div>
+
       <Header toggleSidebar={toggleSidebar} />
       
-      <div className="flex pt-[70px]">
+      <div className="flex pt-[10vh] relative z-10">
         <Sidebar isOpen={isSidebarOpen} />
         
-        <main className={`flex-1 font-poppins transition-all duration-300 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
-          <div className="p-6 lg:p-8">
-            {/* Header Section */}
-            <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'} p-4 md:p-6 lg:p-8 overflow-y-auto h-[90vh]`}>
+          {/* Header Section */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">
+                  <span className="text-gray-400">Referral</span>{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Network</span>
+                </h1>
+                <p className="text-gray-400 text-sm md:text-base mt-2">
+                  Manage and track your referred users
+                </p>
+              </div>
+              <div className="flex items-center gap-3 mt-4 lg:mt-0">
+                <button
+                  onClick={exportToCSV}
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-tl-md rounded-br-md hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
+                >
+                  <FaDownload className="text-cyan-400" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Export CSV</span>
+                </button>
+              </div>
+            </div>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-500 to-blue-600 mt-4 rounded-full"></div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-[600] text-gray-900">
-                    Referral Network
-                  </h1>
-                  <p className="text-gray-600 mt-2 text-[13px]">
-                    Manage and track your referred users
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Referrals</h3>
+                  <p className="text-2xl md:text-3xl font-bold">
+                    {referralsData.totalReferrals}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    All time referrals
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Referrals</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {referralsData.totalReferrals}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      All time referrals
-                    </p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <FaUserPlus className="text-blue-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6  border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Active Referrals</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {referralsData.activeReferrals}
-                    </p>
-                    <p className="text-xs text-green-600 mt-2 flex items-center">
-                      <FaChartLine className="mr-1" />
-                      {referralsData.totalReferrals > 0 
-                        ? ((referralsData.activeReferrals / referralsData.totalReferrals) * 100).toFixed(1) 
-                        : 0}% active rate
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <FaUserCheck className="text-green-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(referralsData.totalEarnings)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      From referrals
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 rounded-xl">
-                    <FaMoneyBillWave className="text-purple-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6  border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pending</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {referralsData.pendingReferrals}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Awaiting verification
-                    </p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-xl">
-                    <FaUserClock className="text-yellow-600 text-xl" />
-                  </div>
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaUserPlus className="text-cyan-400 text-xl md:text-2xl" />
                 </div>
               </div>
             </div>
 
-            {/* Performance Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-[5px] p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium opacity-90">Today</p>
-                    <p className="text-2xl font-bold mt-1">{referralsData.stats.today.signups} Signups</p>
-                    <p className="text-sm opacity-80 mt-2">{formatCurrency(referralsData.stats.today.earnings)} Earned</p>
-                  </div>
-                  <FaCalendarAlt className="text-2xl opacity-80" />
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Active Referrals</h3>
+                  <p className="text-2xl md:text-3xl font-bold">
+                    {referralsData.activeReferrals}
+                  </p>
+                  <p className="text-xs text-green-400 mt-2 flex items-center">
+                    <FaChartLine className="mr-1" />
+                    {referralsData.totalReferrals > 0 
+                      ? ((referralsData.activeReferrals / referralsData.totalReferrals) * 100).toFixed(1) 
+                      : 0}% active rate
+                  </p>
                 </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-[5px] p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium opacity-90">This Week</p>
-                    <p className="text-2xl font-bold mt-1">{referralsData.stats.week.signups} Signups</p>
-                    <p className="text-sm opacity-80 mt-2">{formatCurrency(referralsData.stats.week.earnings)} Earned</p>
-                  </div>
-                  <FaChartLine className="text-2xl opacity-80" />
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-[5px] p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium opacity-90">This Month</p>
-                    <p className="text-2xl font-bold mt-1">{referralsData.stats.month.signups} Signups</p>
-                    <p className="text-sm opacity-80 mt-2">{formatCurrency(referralsData.stats.month.earnings)} Earned</p>
-                  </div>
+                <div className="p-3 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-lg">
+                  <FaUserCheck className="text-green-400 text-xl md:text-2xl" />
                 </div>
               </div>
             </div>
 
-            {/* Referrals Table */}
-            <div className="bg-white rounded-[5px] border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  <h2 className="text-xl font-[600] text-gray-900 mb-4 lg:mb-0">
-                    Referral Details ({filteredAndSortedReferrals.length})
-                  </h2>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Earnings</h3>
+                  <p className="text-2xl md:text-3xl font-bold text-cyan-400">
+                    {formatCurrency(referralsData.totalEarnings)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    From referrals
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-lg">
+                  <FaMoneyBillWave className="text-purple-400 text-xl md:text-2xl" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Pending</h3>
+                  <p className="text-2xl md:text-3xl font-bold">
+                    {referralsData.pendingReferrals}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Awaiting verification
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-yellow-500/20 to-amber-600/20 rounded-lg">
+                  <FaUserClock className="text-yellow-400 text-xl md:text-2xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div className="bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400 mb-2">Today</h3>
+                  <p className="text-2xl md:text-3xl font-bold">{referralsData.stats.today.signups} Signups</p>
+                  <p className="text-sm text-cyan-300 mt-2">{formatCurrency(referralsData.stats.today.earnings)} Earned</p>
+                </div>
+                <FaCalendarAlt className="text-2xl text-cyan-400" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-500/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-green-400 mb-2">This Week</h3>
+                  <p className="text-2xl md:text-3xl font-bold">{referralsData.stats.week.signups} Signups</p>
+                  <p className="text-sm text-green-300 mt-2">{formatCurrency(referralsData.stats.week.earnings)} Earned</p>
+                </div>
+                <FaChartLine className="text-2xl text-green-400" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-purple-400 mb-2">This Month</h3>
+                  <p className="text-2xl md:text-3xl font-bold">{referralsData.stats.month.signups} Signups</p>
+                  <p className="text-sm text-purple-300 mt-2">{formatCurrency(referralsData.stats.month.earnings)} Earned</p>
+                </div>
+                <FaUsers className="text-2xl text-purple-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Referrals Table */}
+          <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden backdrop-blur-sm">
+            <div className="p-4 md:p-6 border-b border-white/10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <h2 className="text-xl md:text-2xl font-bold uppercase tracking-widest mb-4 lg:mb-0">
+                  Referral Details ({filteredAndSortedReferrals.length})
+                </h2>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Search Input */}
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                    <input
+                      type="text"
+                      placeholder="Search referrals..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm w-full sm:w-64 text-white placeholder-gray-500"
+                    />
+                  </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {/* Search Input */}
-                    <div className="relative">
-                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search referrals..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm w-full sm:w-64"
-                      />
-                    </div>
-                    
-                    {/* Status Filter */}
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="pending">Pending</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
+                  {/* Status Filter */}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-white"
+                  >
+                    <option value="all" className="bg-[#000514]">All Status</option>
+                    <option value="active" className="bg-[#000514]">Active</option>
+                    <option value="pending" className="bg-[#000514]">Pending</option>
+                    <option value="inactive" className="bg-[#000514]">Inactive</option>
+                  </select>
 
-                    {/* Date Filter */}
-                    <select
-                      value={dateFilter}
-                      onChange={(e) => setDateFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                    >
-                      <option value="all">All Time</option>
-                      <option value="today">Today</option>
-                      <option value="week">This Week</option>
-                      <option value="month">This Month</option>
-                    </select>
-                  </div>
+                  {/* Date Filter */}
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-sm text-white"
+                  >
+                    <option value="all" className="bg-[#000514]">All Time</option>
+                    <option value="today" className="bg-[#000514]">Today</option>
+                    <option value="week" className="bg-[#000514]">This Week</option>
+                    <option value="month" className="bg-[#000514]">This Month</option>
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort('joinedAt')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Joined</span>
-                        </div>
-                      </th>
-                      <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort('status')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Status</span>
-                        </div>
-                      </th>
-                      <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort('totalEarned')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Earned</span>
-                        </div>
-                      </th>
-                      <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                        onClick={() => handleSort('lastActivity')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Last Activity</span>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredAndSortedReferrals.map((referral) => {
-                      const activityLevel = getActivityLevel(referral.lastActivity);
-                      
-                      return (
-                        <tr key={referral.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {formatDate(referral.joinedAt)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Source: {referral.source}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {getStatusBadge(referral.status)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold text-gray-900">
-                              {formatCurrency(referral.totalEarned)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {referral.totalBets} bets
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {formatDate(referral.lastActivity)}
-                            </div>
-                            <div className={`text-xs font-medium ${activityLevel.color}`}>
-                              {activityLevel.level} activity
-                            </div>
-                          </td>
-               
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-white/5">
+                  <tr>
+                    <th 
+                      className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                      onClick={() => handleSort('joinedAt')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Joined</span>
+                        {getSortIcon('joinedAt')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Status</span>
+                        {getSortIcon('status')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                      onClick={() => handleSort('totalEarned')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Earned</span>
+                        {getSortIcon('totalEarned')}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400 cursor-pointer"
+                      onClick={() => handleSort('lastActivity')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Last Activity</span>
+                        {getSortIcon('lastActivity')}
+                      </div>
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {filteredAndSortedReferrals.map((referral) => {
+                    const activityLevel = getActivityLevel(referral.lastActivity);
+                    
+                    return (
+                      <tr key={referral.id} className="hover:bg-white/5 transition-colors">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-300">
+                            {formatDate(referral.joinedAt)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Source: {referral.source}
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(referral.status)}
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-cyan-400">
+                            {formatCurrency(referral.totalEarned)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {referral.totalBets} bets
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-300">
+                            {formatDate(referral.lastActivity)}
+                          </div>
+                          <div className={`text-xs font-bold ${activityLevel.color}`}>
+                            {activityLevel.level} activity
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => viewReferralDetails(referral)}
+                            className="px-3 py-1 bg-white/5 border border-white/10 rounded-md hover:bg-white/10 transition-all duration-300 flex items-center gap-2 text-xs"
+                          >
+                            <FaEye className="text-cyan-400" />
+                            <span className="font-bold uppercase tracking-widest">View</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
-                {filteredAndSortedReferrals.length === 0 && (
-                  <div className="p-8 text-center">
-                    <p className="text-gray-600">No referrals found</p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      {searchTerm || statusFilter !== 'all' || dateFilter !== 'all' 
-                        ? 'Try adjusting your filters' 
-                        : 'Your referrals will appear here'}
-                    </p>
+              {filteredAndSortedReferrals.length === 0 && (
+                <div className="p-8 text-center">
+                  <div className="text-gray-500 mb-2">
+                    <FaUsers className="text-3xl mx-auto" />
                   </div>
-                )}
-              </div>
-
-              {/* Pagination */}
-              {filteredAndSortedReferrals.length > 0 && (
-                <div className="px-6 py-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-700">
-                      Showing <span className="font-medium">1</span> to{' '}
-                      <span className="font-medium">{filteredAndSortedReferrals.length}</span> of{' '}
-                      <span className="font-medium">{filteredAndSortedReferrals.length}</span> results
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Previous
-                      </button>
-                      <button className="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        Next
-                      </button>
-                    </div>
-                  </div>
+                  <p className="text-gray-400">No referrals found</p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    {searchTerm || statusFilter !== 'all' || dateFilter !== 'all' 
+                      ? 'Try adjusting your filters' 
+                      : 'Your referrals will appear here'}
+                  </p>
                 </div>
               )}
             </div>
+
+            {/* Pagination */}
+            {filteredAndSortedReferrals.length > 0 && (
+              <div className="px-4 md:px-6 py-4 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-400">
+                    Showing <span className="font-bold text-cyan-400">1</span> to{' '}
+                    <span className="font-bold text-cyan-400">{filteredAndSortedReferrals.length}</span> of{' '}
+                    <span className="font-bold text-cyan-400">{filteredAndSortedReferrals.length}</span> results
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-sm font-bold uppercase tracking-widest text-gray-400 hover:bg-white/10 transition-all">
+                      Previous
+                    </button>
+                    <button className="px-3 py-1 bg-white/5 border border-white/10 rounded-md text-sm font-bold uppercase tracking-widest text-gray-400 hover:bg-white/10 transition-all">
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
 
       {/* Referral Details Modal */}
       {showDetailsModal && selectedReferral && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#000514] border border-cyan-500/30 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">Referral Details</h3>
+                <h3 className="text-xl font-bold uppercase tracking-widest">Referral Details</h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   <FaTimes className="text-xl" />
                 </button>
@@ -650,30 +698,30 @@ const Referrals = () => {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
+                  <h4 className="text-lg font-bold uppercase tracking-widest text-gray-400 mb-4">Personal Information</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Name</label>
-                      <p className="mt-1 text-sm text-gray-900">{selectedReferral.name}</p>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Name</label>
+                      <p className="mt-1 text-sm text-gray-300">{selectedReferral.name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <p className="mt-1 text-sm text-gray-900 flex items-center">
-                        <FaEnvelope className="w-4 h-4 mr-2 text-gray-400" />
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Email</label>
+                      <p className="mt-1 text-sm text-gray-300 flex items-center">
+                        <FaEnvelope className="w-4 h-4 mr-2 text-gray-500" />
                         {selectedReferral.email}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Phone</label>
-                      <p className="mt-1 text-sm text-gray-900 flex items-center">
-                        <FaPhone className="w-4 h-4 mr-2 text-gray-400" />
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Phone</label>
+                      <p className="mt-1 text-sm text-gray-300 flex items-center">
+                        <FaPhone className="w-4 h-4 mr-2 text-gray-500" />
                         {selectedReferral.phone}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Country</label>
-                      <p className="mt-1 text-sm text-gray-900 flex items-center">
-                        <FaMapMarkerAlt className="w-4 h-4 mr-2 text-gray-400" />
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Country</label>
+                      <p className="mt-1 text-sm text-gray-300 flex items-center">
+                        <FaMapMarkerAlt className="w-4 h-4 mr-2 text-gray-500" />
                         {selectedReferral.country}
                       </p>
                     </div>
@@ -681,29 +729,29 @@ const Referrals = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">Activity & Earnings</h4>
+                  <h4 className="text-lg font-bold uppercase tracking-widest text-gray-400 mb-4">Activity & Earnings</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Status</label>
                       <div className="mt-1">
                         {getStatusBadge(selectedReferral.status)}
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Joined Date</label>
-                      <p className="mt-1 text-sm text-gray-900">
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Joined Date</label>
+                      <p className="mt-1 text-sm text-gray-300">
                         {formatDateTime(selectedReferral.joinedAt)}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Last Activity</label>
-                      <p className="mt-1 text-sm text-gray-900">
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Last Activity</label>
+                      <p className="mt-1 text-sm text-gray-300">
                         {formatDateTime(selectedReferral.lastActivity)}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Total Earned</label>
-                      <p className="mt-1 text-lg font-semibold text-green-600">
+                      <label className="block text-sm font-bold uppercase tracking-widest text-gray-500">Total Earned</label>
+                      <p className="mt-1 text-lg font-bold text-cyan-400">
                         {formatCurrency(selectedReferral.totalEarned)}
                       </p>
                     </div>
@@ -711,34 +759,34 @@ const Referrals = () => {
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h4>
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h4 className="text-lg font-bold uppercase tracking-widest text-gray-400 mb-4">Performance Metrics</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{selectedReferral.totalBets}</p>
-                    <p className="text-sm text-gray-600">Total Bets</p>
+                  <div className="text-center p-4 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-cyan-400">{selectedReferral.totalBets}</p>
+                    <p className="text-sm text-gray-500">Total Bets</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(selectedReferral.totalDeposits)}</p>
-                    <p className="text-sm text-gray-600">Total Deposits</p>
+                  <div className="text-center p-4 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-cyan-400">{formatCurrency(selectedReferral.totalDeposits)}</p>
+                    <p className="text-sm text-gray-500">Total Deposits</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(selectedReferral.conversionValue)}</p>
-                    <p className="text-sm text-gray-600">Conversion Value</p>
+                  <div className="text-center p-4 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-cyan-400">{formatCurrency(selectedReferral.conversionValue)}</p>
+                    <p className="text-sm text-gray-500">Conversion Value</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{selectedReferral.source}</p>
-                    <p className="text-sm text-gray-600">Source</p>
+                  <div className="text-center p-4 bg-white/5 rounded-lg">
+                    <p className="text-2xl font-bold text-cyan-400">{selectedReferral.source}</p>
+                    <p className="text-sm text-gray-500">Source</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <div className="px-6 py-4 border-t border-white/10 bg-white/5 rounded-b-xl">
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                  className="px-4 py-2 bg-white/10 text-white font-bold rounded-tl-md rounded-br-md hover:bg-white/20 transition-all duration-300"
                 >
                   Close
                 </button>

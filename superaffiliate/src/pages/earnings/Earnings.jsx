@@ -14,13 +14,16 @@ import {
   FaSync,
   FaUserPlus,
   FaUsers,
-  FaMousePointer
+  FaMousePointer,
+  FaArrowUp,
+  FaArrowDown,
+  FaPercent,
 } from 'react-icons/fa';
 import Header from '../../components/Header';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaBangladeshiTakaSign } from 'react-icons/fa6';
+import { FaBangladeshiTakaSign } from "react-icons/fa6";
 
 const Earnings = () => {
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
@@ -58,7 +61,16 @@ const Earnings = () => {
       pending: 0,
       paid: 0,
       byType: {}
-    }
+    },
+    totalBalance: 0,
+    balanceChange: 0,
+    periodChange: 0,
+    expensesChange: 0,
+    incomeChange: 0,
+    lastMonthBalance: 0,
+    lastMonthPeriodChange: 0,
+    lastMonthExpenses: 0,
+    lastMonthIncome: 0
   });
 
   const toggleSidebar = () => {
@@ -115,7 +127,16 @@ const Earnings = () => {
           monthlyGrowth,
           transactions,
           earningsHistory,
-          earningsSummary
+          earningsSummary,
+          totalBalance: stats.totalEarnings || 0,
+          balanceChange: stats.balanceChange || 0,
+          periodChange: stats.periodChange || 0,
+          expensesChange: stats.expensesChange || 0,
+          incomeChange: stats.incomeChange || 0,
+          lastMonthBalance: stats.lastMonthBalance || 0,
+          lastMonthPeriodChange: stats.lastMonthPeriodChange || 0,
+          lastMonthExpenses: stats.lastMonthExpenses || 0,
+          lastMonthIncome: stats.lastMonthIncome || 0
         }));
       } else {
         throw new Error(response.data.message || 'Failed to fetch earnings data');
@@ -258,10 +279,11 @@ const Earnings = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-BD', {
       style: 'currency',
       currency: 'BDT',
-      minimumFractionDigits: 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -275,19 +297,19 @@ const Earnings = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: FaRegClock },
-      paid: { color: 'bg-green-100 text-green-800', icon: FaCheckCircle },
-      failed: { color: 'bg-red-100 text-red-800', icon: FaTimesCircle },
-      processing: { color: 'bg-blue-100 text-blue-800', icon: FaRegClock },
-      completed: { color: 'bg-green-100 text-green-800', icon: FaCheckCircle },
-      cancelled: { color: 'bg-red-100 text-red-800', icon: FaTimesCircle }
+      pending: { color: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30', icon: FaRegClock },
+      paid: { color: 'bg-green-500/20 text-green-400 border border-green-500/30', icon: FaCheckCircle },
+      failed: { color: 'bg-red-500/20 text-red-400 border border-red-500/30', icon: FaTimesCircle },
+      processing: { color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30', icon: FaRegClock },
+      completed: { color: 'bg-green-500/20 text-green-400 border border-green-500/30', icon: FaCheckCircle },
+      cancelled: { color: 'bg-red-500/20 text-red-400 border border-red-500/30', icon: FaTimesCircle }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
     const IconComponent = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${config.color}`}>
         <IconComponent className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -296,18 +318,18 @@ const Earnings = () => {
 
   const getTypeBadge = (type) => {
     const typeConfig = {
-      deposit_commission: { color: 'bg-blue-100 text-blue-800', label: 'Deposit' },
-      bet_commission: { color: 'bg-purple-100 text-purple-800', label: 'Bet' },
-      withdrawal_commission: { color: 'bg-orange-100 text-orange-800', label: 'Withdrawal' },
-      registration_bonus: { color: 'bg-green-100 text-green-800', label: 'Bonus' },
-      cpa: { color: 'bg-indigo-100 text-indigo-800', label: 'CPA' },
-      other: { color: 'bg-gray-100 text-gray-800', label: 'Other' }
+      deposit_commission: { color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30', label: 'Deposit' },
+      bet_commission: { color: 'bg-purple-500/20 text-purple-400 border border-purple-500/30', label: 'Bet' },
+      withdrawal_commission: { color: 'bg-orange-500/20 text-orange-400 border border-orange-500/30', label: 'Withdrawal' },
+      registration_bonus: { color: 'bg-green-500/20 text-green-400 border border-green-500/30', label: 'Bonus' },
+      cpa: { color: 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30', label: 'CPA' },
+      other: { color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30', label: 'Other' }
     };
 
     const config = typeConfig[type] || typeConfig.other;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest ${config.color}`}>
         {config.label}
       </span>
     );
@@ -355,351 +377,407 @@ const Earnings = () => {
   const totalPages = Math.ceil(payoutHistory.total / payoutHistory.limit);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#000514] text-white font-sans selection:bg-cyan-500 selection:text-black">
+      <style>{`
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000514; }
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #22d3ee 0%, #2563eb 100%);
+          border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+      `}</style>
+
+      {/* Background Decoration */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
+      </div>
+
       <Header toggleSidebar={toggleSidebar} />
 
-      <div className="flex pt-20">
+      <div className="flex pt-[10vh] relative z-10">
         <Sidebar isOpen={isSidebarOpen} />
 
-        <main className={`flex-1 font-poppins transition-all duration-300 ${isSidebarOpen ? 'lg:ml-80' : 'ml-0'}`}>
-          <div className="p-6 lg:p-8">
-            {/* Header Section */}
-            <div className="mb-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h1 className="text-2xl font-[600] text-gray-900">Earnings Overview</h1>
-                  <p className="text-gray-600 mt-2 text-[13px]">
-                    Track your commissions and referral earnings
+        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-[40%] lg:ml-[28%] xl:ml-[17%]' : 'ml-0'} p-4 md:p-6 lg:p-8 overflow-y-auto h-[90vh]`}>
+          {/* Header Section */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-tight">
+                  <span className="text-gray-400">Earnings</span>{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Overview</span>
+                </h1>
+                <p className="text-gray-400 text-sm md:text-base mt-2">
+                  Track your commissions and referral earnings
+                </p>
+              </div>
+              <div className="flex items-center gap-3 mt-4 lg:mt-0">
+                <button
+                  onClick={refreshData}
+                  className="px-4 py-2 bg-white/5 border border-white/10 rounded-tl-md rounded-br-md hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
+                >
+                  <FaSync className="text-cyan-400" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Refresh</span>
+                </button>
+              </div>
+            </div>
+            <div className="h-1.5 w-24 bg-gradient-to-r from-cyan-500 to-blue-600 mt-4 rounded-full"></div>
+          </div>
+
+          {/* Time Range Filter */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'week', label: 'This Week' },
+                { value: 'month', label: 'This Month' },
+                { value: 'quarter', label: 'This Quarter' },
+                { value: 'year', label: 'This Year' },
+                { value: 'all', label: 'All Time' }
+              ].map((range) => (
+                <button
+                  key={range.value}
+                  onClick={() => setTimeRange(range.value)}
+                  className={`px-4 py-2 rounded-tl-md rounded-br-md cursor-pointer font-bold uppercase tracking-widest text-xs transition-all duration-300 ${
+                    timeRange === range.value
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-black'
+                      : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* Total Earnings Card */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaMoneyBillWave className="text-xl md:text-2xl text-cyan-400" />
+                </div>
+                <div className="text-right">
+                  <span className={`text-xs font-bold flex items-center justify-end ${earningsData.balanceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {earningsData.balanceChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                    {Math.abs(earningsData.balanceChange)}%
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">vs last month</p>
+                </div>
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Earnings</h3>
+              <p className="text-2xl md:text-3xl font-bold mb-2">{formatCurrency(earningsData.totalEarnings)}</p>
+              <p className="text-xs text-gray-500">Lifetime earnings</p>
+            </div>
+
+            {/* Pending Earnings Card */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaRegClock className="text-xl md:text-2xl text-cyan-400" />
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-cyan-400">Min: {formatCurrency(earningsData.minimumPayout)}</span>
+                  <p className={`text-xs mt-1 ${earningsData.canRequestPayout ? 'text-green-400' : 'text-amber-400'}`}>
+                    {earningsData.canRequestPayout ? 'Eligible' : 'Not eligible'}
                   </p>
+                </div>
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Pending Earnings</h3>
+              <p className="text-2xl md:text-3xl font-bold mb-2">{formatCurrency(earningsData.pendingEarnings)}</p>
+              <p className="text-xs text-gray-500">Available for withdrawal</p>
+            </div>
+
+            {/* Paid Earnings Card */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 hover:border-cyan-500/50 transition-all backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-lg">
+                  <FaCheckCircle className="text-xl md:text-2xl text-cyan-400" />
+                </div>
+                <div className="text-right">
+                  <span className={`text-xs font-bold flex items-center justify-end ${earningsData.incomeChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {earningsData.incomeChange >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                    {Math.abs(earningsData.incomeChange)}%
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">this month</p>
+                </div>
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Paid Earnings</h3>
+              <p className="text-2xl md:text-3xl font-bold mb-2">{formatCurrency(earningsData.paidEarnings)}</p>
+              <p className="text-xs text-gray-500">Successfully paid out</p>
+            </div>
+
+            {/* Commission Rate Card */}
+            <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg">
+                  <FaPercent className="text-xl text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">Commission Rate</h3>
+                  <p className="text-2xl font-bold">{(earningsData.commissionRate * 100).toFixed(1)}%</p>
+                  <p className="text-xs text-gray-500">Per successful referral</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            {/* Total Referrals Card */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Referrals</h3>
+                  <p className="text-2xl md:text-3xl font-bold mb-2">{earningsData.activeReferrals}</p>
+                  <p className="text-xs text-gray-500">Active referrals</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 rounded-lg">
+                  <FaUsers className="text-xl md:text-2xl text-indigo-400" />
                 </div>
               </div>
             </div>
 
-            {/* Time Range Filter */}
-            <div className="mb-8">
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { value: 'week', label: 'This Week' },
-                  { value: 'month', label: 'This Month' },
-                  { value: 'quarter', label: 'This Quarter' },
-                  { value: 'year', label: 'This Year' },
-                  { value: 'all', label: 'All Time' }
-                ].map((range) => (
+            {/* Total Clicks Card */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Total Clicks</h3>
+                  <p className="text-2xl md:text-3xl font-bold mb-2">{earningsData.clickCount}</p>
+                  <p className="text-xs text-gray-500">Affiliate link clicks</p>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-pink-500/20 to-rose-600/20 rounded-lg">
+                  <FaMousePointer className="text-xl md:text-2xl text-pink-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payout Eligibility Card */}
+          <div className="bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 rounded-xl p-5 md:p-6 mb-6 md:mb-8 backdrop-blur-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/10 rounded-xl">
+                  <FaBangladeshiTakaSign className="text-2xl text-cyan-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold uppercase tracking-widest">Available for Payout</h3>
+                  <p className="text-gray-400 text-lg mt-1">
+                    {formatCurrency(earningsData.pendingEarnings)} ready to withdraw
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Minimum payout: {formatCurrency(earningsData.minimumPayout)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4 lg:mt-0">
+                {earningsData.canRequestPayout ? (
                   <button
-                    key={range.value}
-                    onClick={() => setTimeRange(range.value)}
-                    className={`px-4 py-2 rounded-[5px] cursor-pointer font-medium transition-all duration-300 ${
-                      timeRange === range.value
-                        ? 'bg-green-600 text-white'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                    }`}
+                    onClick={handlePayoutRequest}
+                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold rounded-tl-md rounded-br-md hover:brightness-110 transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
                   >
-                    {range.label}
+                    Request Payout
                   </button>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm text-gray-400 mb-2">
+                      Need {formatCurrency(earningsData.minimumPayout - earningsData.pendingEarnings)} more
+                    </p>
+                    <button
+                      disabled
+                      className="px-6 py-3 bg-gray-600 text-gray-400 font-bold rounded-tl-md rounded-br-md cursor-not-allowed"
+                    >
+                      Request Payout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Section */}
+          <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden backdrop-blur-sm mb-6 md:mb-8">
+            <div className="p-4 md:p-6 border-b border-white/10">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <h2 className="text-xl font-bold uppercase tracking-widest mb-4 lg:mb-0">Earnings History</h2>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                    <input
+                      type="text"
+                      placeholder="Search earnings..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white placeholder-gray-500"
+                    />
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white"
+                  >
+                    <option value="all" className="bg-[#000514]">All Status</option>
+                    <option value="pending" className="bg-[#000514]">Pending</option>
+                    <option value="paid" className="bg-[#000514]">Paid</option>
+                    <option value="cancelled" className="bg-[#000514]">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              {isLoading ? (
+        <div className="p-8 text-center">
+    {/* Simple 3-part circle spinner */}
+    <div className="relative inline-flex items-center justify-center">
+      {/* Outer ring - part 1 */}
+      <div className="w-12 h-12 rounded-full border-2 border-transparent border-t-cyan-500 animate-spin"></div>
+      
+      {/* Middle ring - part 2 */}
+      <div className="absolute w-8 h-8 rounded-full border-2 border-transparent border-r-blue-500 animate-spin" 
+           style={{animationDuration: '1.5s'}}></div>
+      
+      {/* Inner ring - part 3 */}
+      <div className="absolute w-4 h-4 rounded-full border-2 border-transparent border-b-purple-500 animate-spin" 
+           style={{animationDuration: '2s'}}></div>
+      
+      {/* Center dot */}
+      <div className="absolute w-2 h-2 bg-white rounded-full animate-pulse"></div>
+    </div>
+    
+    <p className="text-gray-400 mt-4">Loading earnings history...</p>
+  </div>
+              ) : filteredTransactions.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-gray-400">No earnings history found</p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    {searchTerm || statusFilter !== 'all'
+                      ? 'Try adjusting your filters'
+                      : 'Your earnings will appear here'}
+                  </p>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Date
+                      </th>
+                      <th className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Type & Description
+                      </th>
+                      <th className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Amount
+                      </th>
+                      <th className="px-4 md:px-6 py-4 text-left text-xs font-bold uppercase tracking-widest text-gray-400">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {filteredTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="hover:bg-white/5 transition-colors">
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium">
+                              {formatDate(transaction.date)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {transaction.daysAgo === 0 ? 'Today' : `${transaction.daysAgo}d ago`}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {getTypeBadge(transaction.type)}
+                            <div>
+                              <div className="text-sm font-medium">
+                                {getEarningTypeLabel(transaction.type)}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {transaction.description || 'Commission earned'}
+                              </div>
+                              {transaction.metadata && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {transaction.metadata.betType && `Bet: ${transaction.metadata.betType}`}
+                                  {transaction.metadata.depositMethod &&
+                                    `Deposit: ${transaction.metadata.depositMethod}`}
+                                  {transaction.metadata.withdrawalMethod &&
+                                    `Withdrawal: ${transaction.metadata.withdrawalMethod}`}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-cyan-400">
+                            {formatCurrency(transaction.amount)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {transaction.commissionRate.toFixed(1)}% of{' '}
+                            {formatCurrency(transaction.sourceAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(transaction.status)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Earnings Breakdown Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <h3 className="text-lg font-bold uppercase tracking-widest mb-4">Earnings Breakdown</h3>
+              <div className="space-y-4">
+                {Object.entries(earningsData.earningsSummary.byType).map(([type, data]) => (
+                  <div key={type} className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          type === 'bet_commission'
+                            ? 'bg-purple-500'
+                            : type === 'deposit_commission'
+                            ? 'bg-blue-500'
+                            : type === 'withdrawal_commission'
+                            ? 'bg-orange-500'
+                            : type === 'registration_bonus'
+                            ? 'bg-green-500'
+                            : 'bg-gray-500'
+                        }`}
+                      ></div>
+                      <span className="text-gray-300">{data.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-cyan-400">{formatCurrency(data.total)}</span>
+                      <div className="text-xs text-gray-500">{data.count} transactions</div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(earningsData.totalEarnings)}
-                    </p>
-                    <p className="text-xs text-green-600 mt-2 flex items-center">
-                      <FaChartLine className="mr-1" />
-                      +{earningsData.monthlyGrowth.toFixed(1)}% this month
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-xl">
-                    <FaMoneyBillWave className="text-green-600 text-xl" />
-                  </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5 md:p-6 backdrop-blur-sm">
+              <h3 className="text-lg font-bold uppercase tracking-widest mb-4">Commission Structure</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Bet Commission</span>
+                  <span className="font-bold text-cyan-400">
+                    {(earningsData.commissionRate * 100).toFixed(1)}%
+                  </span>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pending Earnings</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(earningsData.pendingEarnings)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Awaiting clearance</p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-xl">
-                    <FaRegClock className="text-yellow-600 text-xl" />
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Deposit Commission</span>
+                  <span className="font-bold text-cyan-400">0%</span>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Paid Earnings</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {formatCurrency(earningsData.paidEarnings)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Successfully paid out</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <FaCheckCircle className="text-blue-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Commission Rate</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {(earningsData.commissionRate * 100).toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Per successful referral</p>
-                  </div>
-                  <div className="p-3 bg-purple-100 rounded-xl">
-                    <FaChartLine className="text-purple-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Performance Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Referrals</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                     {earningsData.activeReferrals}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-indigo-100 rounded-xl">
-                    <FaUsers className="text-indigo-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Clicks</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                      {earningsData.clickCount}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Affiliate link clicks</p>
-                  </div>
-                  <div className="p-3 bg-pink-100 rounded-xl">
-                    <FaMousePointer className="text-pink-600 text-xl" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Payout Eligibility Card */}
-            <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-[5px] p-6 mb-8 text-white">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <FaBangladeshiTakaSign className="text-2xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Available for Payout</h3>
-                    <p className="opacity-90 text-lg">
-                      {formatCurrency(earningsData.pendingEarnings)} ready to withdraw
-                    </p>
-                    <p className="text-sm opacity-80 mt-1">
-                      Minimum payout: {formatCurrency(earningsData.minimumPayout)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex space-x-3 mt-4 lg:mt-0">
-                  {earningsData.canRequestPayout ? (
-                    <button
-                      onClick={handlePayoutRequest}
-                      className="px-6 py-3 bg-white text-green-600 rounded-[5px] cursor-pointer mt-1 font-semibold hover:bg-gray-100 transition-colors shadow-md"
-                    >
-                      Request Payout
-                    </button>
-                  ) : (
-                    <div className="text-center">
-                      <p className="text-sm opacity-90">
-                        Need {formatCurrency(earningsData.minimumPayout - earningsData.pendingEarnings)} more
-                      </p>
-                      <button
-                        disabled
-                        className="px-6 py-2 mt-1 bg-white/50 text-white rounded-[5px] font-[500] text-[14px] cursor-not-allowed"
-                      >
-                        Request Payout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Transactions Section */}
-            <div className="bg-white rounded-[5px] border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  <h2 className="text-xl font-[600] text-gray-900 mb-4 lg:mb-0">Earnings History</h2>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="relative">
-                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search earnings..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      />
-                    </div>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-[5px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="pending">Pending</option>
-                      <option value="paid">Paid</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                {isLoading ? (
-                  <div className="p-8 text-center">
-                    <p className="text-gray-600 mt-4">Loading earnings history...</p>
-                  </div>
-                ) : filteredTransactions.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <p className="text-gray-600">No earnings history found</p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      {searchTerm || statusFilter !== 'all'
-                        ? 'Try adjusting your filters'
-                        : 'Your earnings will appear here'}
-                    </p>
-                  </div>
-                ) : (
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type & Description
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredTransactions.map((transaction) => (
-                        <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {formatDate(transaction.date)}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {transaction.daysAgo === 0 ? 'Today' : `${transaction.daysAgo}d ago`}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-2">
-                              {getTypeBadge(transaction.type)}
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {getEarningTypeLabel(transaction.type)}
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {transaction.description || 'Commission earned'}
-                                </div>
-                                {transaction.metadata && (
-                                  <div className="text-xs text-gray-400 mt-1">
-                                    {transaction.metadata.betType && `Bet: ${transaction.metadata.betType}`}
-                                    {transaction.metadata.depositMethod &&
-                                      `Deposit: ${transaction.metadata.depositMethod}`}
-                                    {transaction.metadata.withdrawalMethod &&
-                                      `Withdrawal: ${transaction.metadata.withdrawalMethod}`}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold text-gray-900">
-                              {formatCurrency(transaction.amount)}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {transaction.commissionRate.toFixed(1)}% of{' '}
-                              {formatCurrency(transaction.sourceAmount)}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-
-            {/* Earnings Breakdown Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Earnings Breakdown</h3>
-                <div className="space-y-4">
-                  {Object.entries(earningsData.earningsSummary.byType).map(([type, data]) => (
-                    <div key={type} className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            type === 'bet_commission'
-                              ? 'bg-purple-500'
-                              : type === 'deposit_commission'
-                              ? 'bg-blue-500'
-                              : type === 'withdrawal_commission'
-                              ? 'bg-orange-500'
-                              : type === 'registration_bonus'
-                              ? 'bg-green-500'
-                              : 'bg-gray-500'
-                          }`}
-                        ></div>
-                        <span className="text-gray-700">{data.label}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-semibold text-gray-900">{formatCurrency(data.total)}</span>
-                        <div className="text-xs text-gray-500">{data.count} transactions</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[5px] p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Commission Structure</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Bet Commission</span>
-                    <span className="font-semibold text-green-600">
-                      {(earningsData.commissionRate * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Deposit Commission</span>
-                    <span className="font-semibold text-green-600">0%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">CPA Rate</span>
-                    <span className="font-semibold text-green-600">{formatCurrency(200)}</span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">CPA Rate</span>
+                  <span className="font-bold text-cyan-400">{formatCurrency(200)}</span>
                 </div>
               </div>
             </div>

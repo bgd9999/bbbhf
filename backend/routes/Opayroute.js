@@ -475,10 +475,11 @@ module.exports = function opayApi(settingsCollection) {
         completedAt: new Date(),
         createdAt: new Date()
       };
+      
     matcheduser.depositamount=amountNum;
     matcheduser.waigeringneed=sourceDeposit?.wageringRequirement;
     matcheduser.total_bet=0;
-    matcheduser.affiliatedeposit+=matchingDeposit.amount;
+    matcheduser.affiliatedeposit+=amountNum;
     matcheduser.save();
       // Keep playerbalance if it exists in the pending deposit
       if (pendingDepositInHistory && pendingDepositInHistory.playerbalance !== undefined) {
