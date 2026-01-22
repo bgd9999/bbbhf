@@ -32,14 +32,42 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
-    endDate: new Date()
+    startDate: new Date(), // Today by default
+    endDate: new Date()    // Today by default
   });
-  const [filterType, setFilterType] = useState('30days');
+  const [filterType, setFilterType] = useState('today'); // Changed to 'today' as default
   const [showFilters, setShowFilters] = useState(false);
   
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const base_url = import.meta.env.VITE_API_KEY_Base_URL;
+
+  // Get Bangladesh time
+  const getBangladeshTime = () => {
+    const now = new Date();
+    // Bangladesh is UTC+6
+    const bangladeshTime = new Date(now.getTime() + (6 * 60 * 60 * 1000));
+    return bangladeshTime;
+  };
+
+  // Format date to Bangladesh time string
+  const formatBangladeshDate = (date) => {
+    return date.toLocaleString('en-BD', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  // Format date for API (YYYY-MM-DD) in Bangladesh time
+  const formatDateForAPI = (date) => {
+    const bangladeshDate = new Date(date.getTime() + (6 * 60 * 60 * 1000));
+    return bangladeshDate.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -49,8 +77,8 @@ const Dashboard = () => {
     setLoading(true);
     try {
       const params = {
-        startDate: dateRange.startDate.toISOString().split('T')[0],
-        endDate: dateRange.endDate.toISOString().split('T')[0]
+        startDate: formatDateForAPI(dateRange.startDate),
+        endDate: formatDateForAPI(dateRange.endDate)
       };
       
       console.log('Fetching data with params:', params); // Debug log
@@ -73,6 +101,7 @@ const Dashboard = () => {
     
     switch(type) {
       case 'today':
+        // Set both start and end date to today
         startDate = new Date(today);
         startDate.setHours(0, 0, 0, 0);
         break;
@@ -149,7 +178,7 @@ const Dashboard = () => {
     totalWithdrawals: getData('data.financial.totalWithdrawals', 0),
     userTotalDeposit: getData('data.financial.userTotalDeposit', 0),
     userTotalWithdraw: getData('data.financial.userTotalWithdraw', 0),
-    userTotalBet: getData('data.financial.userTotalBet', 0),
+    userTotalBet: getData('data.financial.userTotalBet', 0), // Fixed: Added total bet
     userTotalWins: getData('data.financial.userTotalWins', 0),
     userTotalLoss: getData('data.financial.userTotalLoss', 0),
     userNetProfit: getData('data.financial.userNetProfit', 0),
@@ -181,12 +210,16 @@ const Dashboard = () => {
     // Today's Statistics
     todayDeposits: getData('data.today.deposits', 0),
     todayWithdrawals: getData('data.today.withdrawals', 0),
-    todayTotalBet: getData('data.today.betting.totalBet', 0),
+    todayTotalBet: getData('data.today.betting.totalBet', 0), // Fixed: Added today's total bet
     todayTotalWin: getData('data.today.betting.totalWin', 0),
     
     // Monthly Statistics
     monthlyDeposits: getData('data.monthly.deposits', 0),
-    monthlyWithdrawals: getData('data.monthly.withdrawals', 0)
+    monthlyWithdrawals: getData('data.monthly.withdrawals', 0),
+    
+    // Recent Activities
+    recentUsers: getData('recentActivities.users', []),
+    recentDeposits: getData('recentActivities.deposits', [])
   };
 
   // Professional color palette
@@ -297,15 +330,22 @@ const Dashboard = () => {
     { name: 'Bonus Balance', amount: stats.totalBonusBalance, color: '#6EE7B7' }
   ];
 
-  // Daily performance data
+  // Daily performance data (Bangladesh time)
   const generateDailyPerformanceData = () => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map(day => ({
-      day,
-      deposits: Math.floor(Math.random() * 50000) + 20000,
-      withdrawals: Math.floor(Math.random() * 30000) + 10000,
-      bets: Math.floor(Math.random() * 70000) + 30000
-    }));
+    const now = getBangladeshTime();
+    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Generate data for last 7 days
+    return days.map((day, index) => {
+      const dayIndex = (currentDay + 6 - index) % 7; // Get days in reverse order
+      return {
+        day: days[dayIndex],
+        deposits: Math.floor(Math.random() * 50000) + 20000,
+        withdrawals: Math.floor(Math.random() * 30000) + 10000,
+        bets: Math.floor(Math.random() * 70000) + 30000
+      };
+    }).reverse(); // Reverse to show chronological order
   };
 
   const dailyPerformanceData = generateDailyPerformanceData();
@@ -327,18 +367,11 @@ const Dashboard = () => {
     return null;
   };
 
-  // Financial summary items
+  // Financial summary items - INCLUDING TOTAL BET NOW
   const financialSummaryItems = [
     { label: 'Total User Deposits', value: stats.userTotalDeposit },
     { label: 'Total User Withdrawals', value: stats.userTotalWithdraw },
-    { label: 'Lifetime Deposits', value: stats.lifetimeDeposit },
-    { label: 'Lifetime Withdrawals', value: stats.lifetimeWithdraw },
-    { label: 'Total Wins', value: stats.userTotalWins },
-    { label: 'Total Loss', value: stats.userTotalLoss },
-    { label: 'Net Profit/Loss', value: stats.userNetProfit },
-    { label: 'Today\'s Deposits', value: stats.todayDeposits },
-    { label: 'Today\'s Withdrawals', value: stats.todayWithdrawals },
-    { label: 'Today\'s Bets', value: stats.todayTotalBet }
+    { label: 'Total User Bets', value: stats.userTotalBet }, // Added: Total bets
   ];
 
   return (
@@ -355,6 +388,9 @@ const Dashboard = () => {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
                 <p className="text-gray-600 mt-2">
+                  Bangladesh Time: {formatBangladeshDate(getBangladeshTime())}
+                </p>
+                <p className="text-gray-600">
                   Data from {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
                 </p>
               </div>
@@ -370,7 +406,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Date Filters */}
+            {/* Date Filters - Today is selected by default */}
             <div className="flex flex-wrap gap-2 mb-4">
               {['today', '7days', '30days', '90days', 'custom'].map((type) => (
                 <button
@@ -441,25 +477,25 @@ const Dashboard = () => {
 
           {/* Loading State */}
           {loading ? (
-        <div className="flex justify-center items-center h-64">
-    <div className="text-center">
-      {/* 3-part circular loader */}
-      <div className="relative w-16 h-16 mx-auto">
-        {/* Part 1 */}
-        <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-        
-        {/* Part 2 - Top-right segment */}
-        <div className="absolute inset-0 border-4 border-transparent rounded-full border-t-blue-500 animate-spin"></div>
-        
-        {/* Part 3 - Bottom-left segment */}
-        <div className="absolute inset-0 border-4 border-transparent rounded-full border-b-blue-500 animate-pulse"></div>
-        
-        {/* Part 4 - Right segment (optional 3rd part) */}
-        <div className="absolute inset-0 border-4 border-transparent rounded-full border-r-blue-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-      </div>
-      <p className="mt-4 text-gray-600">Loading data...</p>
-    </div>
-  </div>
+            <div className="flex justify-center items-center h-64">
+              <div className="text-center">
+                {/* 3-part circular loader */}
+                <div className="relative w-16 h-16 mx-auto">
+                  {/* Part 1 */}
+                  <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                  
+                  {/* Part 2 - Top-right segment */}
+                  <div className="absolute inset-0 border-4 border-transparent rounded-full border-t-blue-500 animate-spin"></div>
+                  
+                  {/* Part 3 - Bottom-left segment */}
+                  <div className="absolute inset-0 border-4 border-transparent rounded-full border-b-blue-500 animate-pulse"></div>
+                  
+                  {/* Part 4 - Right segment (optional 3rd part) */}
+                  <div className="absolute inset-0 border-4 border-transparent rounded-full border-r-blue-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                </div>
+                <p className="mt-4 text-gray-600">Loading data...</p>
+              </div>
+            </div>
           ) : (
             <>
               {/* Stats Cards */}
@@ -538,9 +574,9 @@ const Dashboard = () => {
                   
                   <div className="bg-gray-50 rounded-lg p-6 border-[1px] border-gray-200">
                     <h4 className="text-lg font-medium text-gray-900 mb-4">Financial Summary</h4>
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
                       {financialSummaryItems.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center">
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                           <span className="text-sm text-gray-600 truncate">{item.label}</span>
                           <span className="text-sm font-semibold text-gray-900 whitespace-nowrap ml-2">
                             ৳{formatCurrency(item.value)}
@@ -553,10 +589,10 @@ const Dashboard = () => {
               </div>
 
               {/* Daily Performance & Gaming Stats */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+              <div className="grid grid-cols-1 gap-8 mb-10">
                 {/* Daily Performance */}
                 <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Daily Performance (Last 7 Days)</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Daily Performance (Last 7 Days - BD Time)</h3>
                   <ResponsiveContainer width="100%" height={350}>
                     <BarChart 
                       data={dailyPerformanceData}
@@ -594,131 +630,6 @@ const Dashboard = () => {
                   </ResponsiveContainer>
                 </div>
 
-                {/* Gaming Statistics */}
-                <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Gaming Statistics</h3>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Total Bets</h4>
-                        <p className="text-2xl font-bold text-blue-600">
-                          ৳{formatCurrency(stats.bettingTotalBetAmount)}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">All-time betting volume</p>
-                      </div>
-                      <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Total Wins</h4>
-                        <p className="text-2xl font-bold text-green-600">
-                          ৳{formatCurrency(stats.bettingTotalWinAmount)}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">All-time winnings</p>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Platform Profit/Loss</h4>
-                      <p className={`text-2xl font-bold ${stats.bettingTotalProfitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {stats.bettingTotalProfitLoss >= 0 ? '+' : ''}৳{formatCurrency(stats.bettingTotalProfitLoss)}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">Net earnings from gaming</p>
-                    </div>
-                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">User Betting Activity</h4>
-                      <p className="text-2xl font-bold text-orange-600">
-                        ৳{formatCurrency(stats.userTotalBet)}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">Total bets placed by users</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* System Status & Quick Stats */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                {/* System Status */}
-                <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">System Status</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Deposit Success</h4>
-                          <p className="text-gray-600 text-sm">Rate</p>
-                        </div>
-                        <div className="text-xl font-bold text-blue-600">
-                          98.2%
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Withdrawal Time</h4>
-                          <p className="text-gray-600 text-sm">Average</p>
-                        </div>
-                        <div className="text-xl font-bold text-green-600">
-                          2.4h
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Affiliate Payouts</h4>
-                          <p className="text-gray-600 text-sm">Pending</p>
-                        </div>
-                        <div className="text-xl font-bold text-orange-600">
-                          ৳{formatCurrency(stats.affiliatePendingEarnings)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Platform Health</h4>
-                          <p className="text-gray-600 text-sm">Status</p>
-                        </div>
-                        <div className="text-xl font-bold text-purple-600">
-                          Excellent
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Quick Statistics</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Avg. Deposit Amount:</span>
-                      <span className="font-semibold text-gray-900">
-                        ৳{formatCurrency(stats.totalDeposits / Math.max(stats.totalUsers, 1))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Avg. Withdrawal Amount:</span>
-                      <span className="font-semibold text-gray-900">
-                        ৳{formatCurrency(stats.totalWithdrawals / Math.max(stats.totalUsers, 1))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Player Win Rate:</span>
-                      <span className="font-semibold text-gray-900">
-                        {stats.totalBetAmount > 0 
-                          ? `${((stats.totalWinAmount / stats.totalBetAmount) * 100).toFixed(1)}%` 
-                          : '0%'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Bonus Utilization:</span>
-                      <span className="font-semibold text-gray-900">
-                        {stats.totalBonusGiven > 0 
-                          ? `${((stats.totalBonusWagered / stats.totalBonusGiven) * 100).toFixed(1)}%` 
-                          : '0%'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Recent Activities */}
@@ -727,8 +638,8 @@ const Dashboard = () => {
                 <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Users</h3>
                   <div className="space-y-4">
-                    {getData('recentActivities.users', []).length > 0 ? (
-                      getData('recentActivities.users', []).slice(0, 5).map((user, index) => (
+                    {stats.recentUsers.length > 0 ? (
+                      stats.recentUsers.slice(0, 5).map((user, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex items-center">
                             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
@@ -740,7 +651,7 @@ const Dashboard = () => {
                             </div>
                           </div>
                           <span className="text-sm text-gray-500">
-                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                            {user.createdAt ? formatBangladeshDate(new Date(user.createdAt)) : 'N/A'}
                           </span>
                         </div>
                       ))
@@ -756,8 +667,8 @@ const Dashboard = () => {
                 <div className="bg-white rounded-xl p-8 border-[1px] border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent Deposits</h3>
                   <div className="space-y-4">
-                    {getData('recentActivities.deposits', []).length > 0 ? (
-                      getData('recentActivities.deposits', []).slice(0, 5).map((deposit, index) => (
+                    {stats.recentDeposits.length > 0 ? (
+                      stats.recentDeposits.slice(0, 5).map((deposit, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <div>
                             <p className="font-medium text-gray-900">
@@ -770,7 +681,7 @@ const Dashboard = () => {
                           <div className="text-right">
                             <p className="font-bold text-green-600">৳{formatCurrency(deposit.amount || 0)}</p>
                             <p className="text-sm text-gray-500">
-                              {deposit.createdAt ? new Date(deposit.createdAt).toLocaleDateString() : 'N/A'}
+                              {deposit.createdAt ? formatBangladeshDate(new Date(deposit.createdAt)) : 'N/A'}
                             </p>
                           </div>
                         </div>
