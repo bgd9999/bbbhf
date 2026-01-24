@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HiOutlineMenuAlt2 } from 'react-icons/hi';
-import { FiSettings } from 'react-icons/fi';
-import { FiUser, FiLogOut } from 'react-icons/fi';
+import { FiSettings, FiUser, FiLogOut } from 'react-icons/fi';
 import { NavLink } from 'react-router-dom';
 import logo from "../assets/logo.png";
 import axios from 'axios';
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast";
 
 const Header = ({ toggleSidebar }) => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -48,7 +47,7 @@ const Header = ({ toggleSidebar }) => {
     fetchBrandingData();
   }, []);
 
-  // -------------------logout-funtion---------------------
+  // -------------------logout-function---------------------
   const handleLogout = () => {
     Swal.fire({
       title: "Are you sure?",
@@ -60,16 +59,18 @@ const Header = ({ toggleSidebar }) => {
       confirmButtonText: "Yes, logout",
     }).then((result) => {
       if (result.isConfirmed) {
-        // Remove localStorage data
-        localStorage.removeItem('loanadmin');
-        localStorage.removeItem('loantoken');
+        // Remove localStorage data with correct keys
+        localStorage.removeItem('admin');
+        localStorage.removeItem('admintoken');
 
-        // Optional: show a success message
+        // Optional: clear ALL localStorage if needed
+        // localStorage.clear();
+
         toast.success("You have been logged out.");
 
-        // Redirect to /admin-login after a short delay
+        // Redirect to login page
         setTimeout(() => {
-          navigate("/ogin");
+          navigate("/admin-login"); // Adjust this to your actual login route
         }, 1000);
       }
     });
@@ -95,39 +96,20 @@ const Header = ({ toggleSidebar }) => {
 
       {/* Right Side - Settings & Admin */}
       <div className="relative flex items-center gap-4" ref={dropdownRef}>
-        <button className="text-[22px] text-white hover:text-[#0A92FA] transition duration-200">
-          <FiSettings />
-        </button>
-
         {/* Admin Dropdown */}
         <div className="relative">
           <button 
-            className="flex items-center gap-2 text-white hover:text-[#0A92FA] transition duration-200"
+            className="flex items-center gap-2 text-white cursor-pointer hover:text-[#0A92FA] transition duration-200"
             onClick={() => setDropdownVisible(!dropdownVisible)}
           >
-            <div className="w-8 h-8 rounded-full bg-theme_color flex items-center justify-center overflow-hidden">
-              <img 
-                src={dynamicLogo}
-                alt="Admin" 
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.src = logo;
-                }}
-              />
+            <div className="w-8 h-8 rounded-full font-bold bg-theme_color flex items-center justify-center overflow-hidden">
+              A
             </div>
-            <span className="hidden md:block text-sm">Admin</span>
+            <span className="hidden md:block font-bold text-base">Admin</span>
           </button>
 
           {dropdownVisible && (
             <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
-              <NavLink
-                to="/profile"
-                className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition duration-200"
-                onClick={() => setDropdownVisible(false)}
-              >
-                <FiUser className="mr-2" />
-                Profile
-              </NavLink>
               <button
                 onClick={handleLogout}
                 className="flex items-center w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition duration-200"

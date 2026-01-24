@@ -1146,8 +1146,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
               Your registration is complete and get ready for the thrill of the game! The world of sports betting is now at your fingertips. Best of luck on your bets!
             </p>
             <NavLink
-              to="/deposit"
-              onClick={() => setShowSignupPopup(false)}
+              to="/member/deposit"
               className="bg-theme_color text-center hover:bg-theme_color/90 text-[14px] text-white font-medium py-3 px-4 rounded-md transition-colors w-full block"
             >
               Deposit now

@@ -76,7 +76,7 @@ const GamePage = () => {
     };
 
     fetchData();
-  }, [API_BASE_URL]);
+  }, []);
 
   // Fetch game link when userData and gameuuid are available
   useEffect(() => {
@@ -116,7 +116,7 @@ const GamePage = () => {
     if (gameuuid && userData) {
       fetchGameLink();
     }
-  }, [gameuuid, userData, API_BASE_URL]);
+  }, [gameuuid]);
 
   // Professional Unified Loader Component
   const ProfessionalLoader = ({ message = "গেম লোড হচ্ছে", subMessage = "অনুগ্রহ করে একটু অপেক্ষা করুন..." }) => (
