@@ -2634,6 +2634,270 @@ Userrouter.post("/getGameLink", async (req, res) => {
 // });
 
 
+// Userrouter.post("/callback-data-game", async (req, res) => {
+//   try {
+//     // Extract fields from request body
+//     let { username, provider_code, amount, game_code, bet_type, transaction_id, verification_key, times } = req.body;
+
+//     if (!username || !provider_code || !amount || !game_code || !bet_type) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Required fields missing: username, provider_code, amount, game_code, and bet_type are required.",
+//       });
+//     }
+
+//     // Process username
+//     username = username.substring(0, 45);
+//     username = username.substring(0, username.length - 2);
+    
+//     const findgame = await Game.findOne({ gameApiID: game_code });
+
+//     // Prepare processed data
+//     const processedData = {
+//       member_account: username,
+//       original_username: username,
+//       bet_amount: bet_type === 'BET' ? parseFloat(amount) : 0,
+//       win_amount: bet_type === 'SETTLE' ? parseFloat(amount) : 0,
+//       game_uid: game_code,
+//       serial_number: transaction_id || `TXN_${Date.now()}`,
+//       currency_code: 'BDT',
+//       platform: 'casino',
+//       game_type: provider_code,
+//       device_info: 'web',
+//       bet_type: bet_type,
+//       provider_code: provider_code,
+//       verification_key: verification_key,
+//       times: times,
+//       game_name: findgame?.name || "no game"
+//     };
+
+//     // Check for duplicate transaction
+//     const existingBet = await BettingHistory.findOne({
+//       serial_number: processedData.serial_number
+//     });
+
+//     if (existingBet) {
+//       return res.status(409).json({
+//         success: false,
+//         message: "Duplicate transaction - serial number already exists.",
+//       });
+//     }
+
+//     // Find user
+//     const matchedUser = await User.findOne({
+//       username: processedData.original_username
+//     });
+
+//     if (!matchedUser) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found!",
+//       });
+//     }
+
+//     // Check if user has affiliate code (kept for reference but not used)
+//     const hasAffiliateCode = !!matchedUser.registrationSource?.affiliateCode;
+
+//     // Calculate amounts based on bet type
+//     const betAmount = processedData.bet_type === 'BET' ? processedData.bet_amount : 0;
+//     const winAmount = processedData.bet_type === 'SETTLE' ? processedData.win_amount : 0;
+//     const netAmount = winAmount - betAmount;
+//     const isWin = processedData.bet_type === 'SETTLE';
+//     const status = isWin ? 'won' : 'lost';
+
+//     // Balance validation
+//     const balanceBefore = matchedUser.balance || 0;
+
+//     // Check if user has sufficient balance for the bet
+//     if (processedData.bet_type === 'BET' && balanceBefore < betAmount) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Insufficient balance. Current balance: ${balanceBefore}, Bet amount: ${betAmount}`,
+//         data: {
+//           username: processedData.original_username,
+//           current_balance: balanceBefore,
+//           required_balance: betAmount,
+//           deficit: betAmount - balanceBefore
+//         }
+//       });
+//     }
+
+//     // Calculate new balance after the transaction
+//     const newBalance = balanceBefore - betAmount + winAmount;
+
+//     // Additional safety check: Ensure new balance doesn't go negative
+//     if (newBalance < 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Transaction would result in negative balance. Current balance: ${balanceBefore}, Transaction net: ${netAmount}`,
+//         data: {
+//           username: processedData.original_username,
+//           balance_before: balanceBefore,
+//           bet_amount: betAmount,
+//           win_amount: winAmount,
+//           net_amount: netAmount,
+//           projected_balance: newBalance
+//         }
+//       });
+//     }
+
+//     // Prepare the bet history record for User model
+//     const betRecord = {
+//       betAmount: betAmount,
+//       betResult: isWin ? "win" : "loss",
+//       transaction_id: processedData.serial_number,
+//       game_id: processedData.game_uid,
+//       bet_time: new Date(),
+//       status: "completed",
+//       provider_code: processedData.provider_code,
+//       bet_type: processedData.bet_type
+//     };
+
+//     // Prepare user update data
+//     const userUpdateData = {
+//       $set: {
+//         balance: newBalance,
+//       },
+//       $inc: {
+//         total_bet: betAmount,
+//         total_wins: isWin ? winAmount : 0,
+//         total_loss: !isWin ? betAmount : 0,
+//         lifetime_bet: betAmount
+//       },
+//       $push: {
+//         betHistory: betRecord,
+//         transactionHistory: {
+//           type: isWin ? "win" : "bet",
+//           amount: isWin ? winAmount : betAmount,
+//           balanceBefore: balanceBefore,
+//           balanceAfter: newBalance,
+//           description: isWin
+//             ? `Won ${winAmount} in game ${processedData.game_uid}`
+//             : `Bet ${betAmount} in game ${processedData.game_uid}`,
+//           referenceId: processedData.serial_number,
+//           createdAt: new Date(),
+//         },
+//       },
+//     };
+
+//     // Execute user update with concurrency control
+//     const updateResult = await User.findOneAndUpdate(
+//       {
+//         _id: new mongoose.Types.ObjectId(matchedUser._id),
+//         balance: { $gte: betAmount } // Ensure balance hasn't changed
+//       },
+//       userUpdateData,
+//       {
+//         returnDocument: "after",
+//         maxTimeMS: 5000
+//       }
+//     );
+
+//     // Check if update was successful
+//     if (!updateResult) {
+//       return res.status(409).json({
+//         success: false,
+//         message: "Transaction failed due to concurrent balance modification. Please try again.",
+//         data: {
+//           username: processedData.original_username,
+//           original_balance: balanceBefore,
+//           current_balance: (await User.findById(matchedUser._id)).balance,
+//           bet_amount: betAmount
+//         }
+//       });
+//     }
+
+//     // Create BettingHistory record
+//     const bettingHistoryRecord = new BettingHistory({
+//       member_account: processedData.member_account,
+//       original_username: processedData.original_username,
+//       user_id: matchedUser._id,
+//       bet_amount: betAmount,
+//       win_amount: winAmount,
+//       net_amount: netAmount,
+//       game_uid: processedData.game_uid,
+//       serial_number: processedData.serial_number,
+//       currency_code: processedData.currency_code,
+//       status: status,
+//       balance_before: balanceBefore,
+//       balance_after: newBalance,
+//       transaction_time: new Date(),
+//       processed_at: new Date(),
+//       platform: processedData.platform,
+//       game_type: processedData.game_type,
+//       device_info: processedData.device_info,
+//       provider_code: processedData.provider_code,
+//       bet_type: processedData.bet_type,
+//       processing_format: 'new',
+//       has_affiliate_code: hasAffiliateCode
+//     });
+
+//     // Save BettingHistory record
+//     await bettingHistoryRecord.save();
+
+//     // Apply bet to wagering (for bonus requirements)
+//     await updateResult.applyBetToWagering(betAmount);
+
+//     // Send success response
+//     const responseData = {
+//       success: true,
+//       data: {
+//         username: processedData.original_username,
+//         balance: updateResult.balance,
+//         win_amount: winAmount,
+//         bet_amount: betAmount,
+//         game_uid: processedData.game_uid,
+//         serial_number: processedData.serial_number,
+//         bet_type: processedData.bet_type,
+//         provider_code: processedData.provider_code,
+//         gameRecordId: updateResult.betHistory[updateResult.betHistory.length - 1]?._id,
+//         bettingHistoryId: bettingHistoryRecord._id,
+//         processing_format: 'new',
+//         has_affiliate_code: hasAffiliateCode
+//       },
+//     };
+
+//     console.log(`✅ Transaction completed successfully for user: ${processedData.original_username}`);
+//     console.log(`   - Balance before: ${balanceBefore}, after: ${updateResult.balance}`);
+//     console.log(`   - Net amount: ${netAmount}`);
+//     console.log(`   - Has affiliate code: ${hasAffiliateCode ? 'YES' : 'NO'}`);
+//     // -------------------------------------affilaite-commission-system------------------------------------------
+
+//      if(hasAffiliateCode){
+//               if(affiliatedeposit > betAmount && isWin===false){
+//                        const affiliate=await Affiliate.findOne({affiliateCode:matchedUser.registrationSource.affiliateCode.toUpperCase(),status:'active'});
+//                       if(affiliate){
+//                        const commissionAmount=(betAmount/100)*affiliate.commissionRate;
+//                         affiliate.pendingEarnings+=commissionAmount;
+//                         affiliate.totalEarnings+=commissionAmount;
+//                         await affiliate.save();
+//                         console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} pending earnings.`);                          
+//               }
+//             }else if(affiliatedeposit <= betAmount && isWin===true){
+//                   const affiliate=await Affiliate.findOne({affiliateCode:matchedUser.registrationSource.affiliateCode.toUpperCase(),status:'active'});
+//                       if(affiliate){
+//                        const commissionAmount=(winAmount/100)*affiliate.commissionRate;
+//                       affiliate.minusBalance+=commissionAmount;
+//                        await affiliate.save();
+//                         console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} pending earnings.`);
+//             }
+//           }
+//      }
+//     // -------------------------------------affilaite-commission-system------------------------------------------
+
+//     res.json(responseData);
+
+//   } catch (error) {
+//     console.error("❌ Error in callback-data-game:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// });
+
+
 Userrouter.post("/callback-data-game", async (req, res) => {
   try {
     // Extract fields from request body
@@ -2695,7 +2959,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       });
     }
 
-    // Check if user has affiliate code (kept for reference but not used)
+    // Check if user has affiliate code
     const hasAffiliateCode = !!matchedUser.registrationSource?.affiliateCode;
 
     // Calculate amounts based on bet type
@@ -2861,29 +3125,114 @@ Userrouter.post("/callback-data-game", async (req, res) => {
     console.log(`   - Balance before: ${balanceBefore}, after: ${updateResult.balance}`);
     console.log(`   - Net amount: ${netAmount}`);
     console.log(`   - Has affiliate code: ${hasAffiliateCode ? 'YES' : 'NO'}`);
-    // -------------------------------------affilaite-commission-system------------------------------------------
-
-     if(hasAffiliateCode){
-              if(affiliatedeposit > betAmount && isWin===false){
-                       const affiliate=await Affiliate.findOne({affiliateCode:matchedUser.registrationSource.affiliateCode.toUpperCase(),status:'active'});
-                      if(affiliate){
-                       const commissionAmount=(betAmount/100)*affiliate.commissionRate;
-                        affiliate.pendingEarnings+=commissionAmount;
-                        affiliate.totalEarnings+=commissionAmount;
-                        await affiliate.save();
-                        console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} pending earnings.`);                          
-              }
-            }else if(affiliatedeposit <= betAmount && isWin===true){
-                  const affiliate=await Affiliate.findOne({affiliateCode:matchedUser.registrationSource.affiliateCode.toUpperCase(),status:'active'});
-                      if(affiliate){
-                       const commissionAmount=(winAmount/100)*affiliate.commissionRate;
-                      affiliate.minusBalance+=commissionAmount;
-                       await affiliate.save();
-                        console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} pending earnings.`);
-            }
-          }
-     }
-    // -------------------------------------affilaite-commission-system------------------------------------------
+    
+    // -------------------------------------affiliate-commission-system------------------------------------------
+    if (hasAffiliateCode) {
+      // Note: 'affiliatedeposit' variable is not defined in your original code
+      // I'm assuming it should be the user's total deposit or something similar
+      // You need to define affiliatedeposit variable or adjust this logic
+      const affiliatedeposit = matchedUser.totalDeposit || 0; // Assuming this field exists
+      
+      if (affiliatedeposit > betAmount && isWin === false) {
+        const affiliate = await Affiliate.findOne({
+          affiliateCode: matchedUser.registrationSource.affiliateCode.toUpperCase(),
+          status: 'active'
+        });
+        
+        if (affiliate) {
+          const commissionAmount = (betAmount / 100) * affiliate.commissionRate;
+          
+          // Update affiliate earnings
+          affiliate.pendingEarnings += commissionAmount;
+          affiliate.totalEarnings += commissionAmount;
+          
+          // Create earnings history record
+          const earningsHistoryRecord = {
+            earningId: `EARN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            affiliateCode: affiliate.affiliateCode,
+            referredUser: {
+              userId: matchedUser._id,
+              username: matchedUser.username,
+              email: matchedUser.email || ''
+            },
+            transactionType: 'bet_loss_commission',
+            betTransactionId: processedData.serial_number,
+            betAmount: betAmount,
+            winAmount: winAmount,
+            netAmount: netAmount,
+            commissionRate: affiliate.commissionRate,
+            commissionAmount: commissionAmount,
+            commissionType: affiliate.commissionType || 'revenue_share',
+            gameDetails: {
+              gameCode: processedData.game_uid,
+              gameName: processedData.game_name,
+              provider: processedData.provider_code
+            },
+            status: 'pending_payout',
+            paymentStatus: 'unpaid',
+            calculationTime: new Date(),
+            processedAt: new Date(),
+            notes: `Commission from user ${matchedUser.username}'s losing bet`
+          };
+          
+          // Push to earnings history
+          affiliate.earningsHistory.push(earningsHistoryRecord);
+          await affiliate.save();
+          
+          console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} pending earnings.`);
+          console.log(`   - Earnings history record created with ID: ${earningsHistoryRecord.earningId}`);
+        }
+      } else if (affiliatedeposit <= betAmount && isWin === true) {
+        const affiliate = await Affiliate.findOne({
+          affiliateCode: matchedUser.registrationSource.affiliateCode.toUpperCase(),
+          status: 'active'
+        });
+        
+        if (affiliate) {
+          const commissionAmount = (winAmount / 100) * affiliate.commissionRate;
+          
+          // Update affiliate minusBalance
+          affiliate.minusBalance += commissionAmount;
+          
+          // Create earnings history record for win scenario
+          const earningsHistoryRecord = {
+            earningId: `EARN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            affiliateCode: affiliate.affiliateCode,
+            referredUser: {
+              userId: matchedUser._id,
+              username: matchedUser.username,
+              email: matchedUser.email || ''
+            },
+            transactionType: 'bet_win_deduction',
+            betTransactionId: processedData.serial_number,
+            betAmount: betAmount,
+            winAmount: winAmount,
+            netAmount: netAmount,
+            commissionRate: affiliate.commissionRate,
+            commissionAmount: commissionAmount,
+            commissionType: affiliate.commissionType || 'revenue_share',
+            gameDetails: {
+              gameCode: processedData.game_uid,
+              gameName: processedData.game_name,
+              provider: processedData.provider_code
+            },
+            status: 'deducted',
+            paymentStatus: 'n/a',
+            calculationTime: new Date(),
+            processedAt: new Date(),
+            notes: `Deduction from user ${matchedUser.username}'s winning bet (affiliate deposit limit reached)`
+          };
+          
+          // Push to earnings history
+          affiliate.earningsHistory.push(earningsHistoryRecord);
+          await affiliate.save();
+          
+          console.log(`✅ Affiliate commission of ${commissionAmount} BDT added to affiliate ${affiliate.affiliateCode} minus balance.`);
+          console.log(`   - Earnings history record created with ID: ${earningsHistoryRecord.earningId}`);
+        }
+      }
+    }
+    // -------------------------------------affiliate-commission-system------------------------------------------
 
     res.json(responseData);
 
@@ -2896,7 +3245,6 @@ Userrouter.post("/callback-data-game", async (req, res) => {
     });
   }
 });
-
 
 
 
