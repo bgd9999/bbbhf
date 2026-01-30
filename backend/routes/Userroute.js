@@ -3543,9 +3543,12 @@ if (hasAffiliateCode) {
     console.log(`   - Net amount: ${netAmount}`);
     console.log(`   - Affiliate deposit: ${affiliatedeposit}`);
         if (processedData.bet_type === 'SETTLE') {
+          const lastBetHistory = matchedUser.betHistory[matchedUser.betHistory.length - 1];
       // Handle SETTLE transactions - this is where we know the outcome
       console.log("✅ Processing SETTLE transaction for commission calculation");
-      console.log("--------------------processedData------------------------",processedData)
+      console.log("--------------------processedData------------------------",processedData);
+      console.log("--------------------lastBetHistory------------------------",lastBetHistory);
+      
     }
   }
 }
