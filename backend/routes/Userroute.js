@@ -2056,8 +2056,6 @@ Userrouter.post("/getGameLink", async (req, res) => {
 //   }
 // });
 
-const mongoose = require('mongoose');
-
 Userrouter.post("/callback-data-game", async (req, res) => {
   try {
     const { username, provider_code, amount, game_code, bet_type, transaction_id } = req.body;
