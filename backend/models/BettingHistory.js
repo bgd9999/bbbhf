@@ -50,7 +50,6 @@ const BettingHistorySchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['won', 'lost', 'pending', 'cancelled'],
         default: 'pending'
     },
     balance_before: {
