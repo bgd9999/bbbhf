@@ -49,16 +49,6 @@ const Header = ({ toggleSidebar }) => {
 
   // -------------------logout-function---------------------
   const handleLogout = () => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You will be logged out!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, logout",
-    }).then((result) => {
-      if (result.isConfirmed) {
         // Remove localStorage data with correct keys
         localStorage.removeItem('admin');
         localStorage.removeItem('admintoken');
@@ -72,8 +62,6 @@ const Header = ({ toggleSidebar }) => {
         setTimeout(() => {
           navigate("/admin-login"); // Adjust this to your actual login route
         }, 1000);
-      }
-    });
   };
 
   return (
