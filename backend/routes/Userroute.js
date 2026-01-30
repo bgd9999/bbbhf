@@ -2367,6 +2367,7 @@ Userrouter.post("/getGameLink", async (req, res) => {
 // });
 
 
+
 Userrouter.post("/callback-data-game", async (req, res) => {
   try {
     const { username, provider_code, amount, game_code, bet_type, transaction_id } = req.body;
@@ -2417,8 +2418,6 @@ Userrouter.post("/callback-data-game", async (req, res) => {
     let winAmount = 0;
     let netAmount = 0;
     let isWin = false;
-    let isAviatorGame = game_code.toLowerCase().includes('aviator') || 
-                        (game?.name && game.name.toLowerCase().includes('aviator'));
 
     if (transactionData.bet_type === 'SETTLE') {
       // Find original BET transaction
@@ -2542,8 +2541,7 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       processing_format: 'new',
       has_affiliate_code: !!user.registrationSource?.affiliateCode,
       is_win: isWin,
-      net_win_amount: netAmount,
-      is_aviator_game: isAviatorGame // Add flag for Aviator games
+      net_win_amount: netAmount
     });
 
     await bettingHistory.save();
@@ -2553,14 +2551,14 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       await updatedUser.applyBetToWagering(betAmount);
     }
 
-    // ------------------------------------- AFFILIATE COMMISSION SYSTEM ------------------------------------------
+    // ------------------------------------- SIMPLE AFFILIATE COMMISSION SYSTEM ------------------------------------------
     const hasAffiliateCode = !!user.registrationSource?.affiliateCode;
-    if (hasAffiliateCode) {
-      const affiliatedeposit = user.affiliatedeposit || 0;
-      const isUserWin = isWin;
-      const isUserLose = !isWin;
-      const betAmountForCommission = betAmount;
+    let commissionAmount = 0;
+    let commissionType = '';
 
+    if (hasAffiliateCode && transactionData.bet_type === 'SETTLE') {
+      const affiliatedeposit = user.affiliatedeposit || 0;
+      
       // Find active affiliate
       const affiliate = await Affiliate.findOne({
         affiliateCode: user.registrationSource.affiliateCode.toUpperCase(),
@@ -2568,84 +2566,69 @@ Userrouter.post("/callback-data-game", async (req, res) => {
       });
 
       if (affiliate) {
-        let commissionAmount = 0;
-        let commissionType = '';
-        let description = '';
-        let status = 'pending';
-        let metadataNotes = '';
+        console.log(`📊 Affiliate Commission Check: User ${user.username}, Bet: ${betAmount}, Win: ${winAmount}, Net: ${netAmount}, Affiliate Deposit: ${affiliatedeposit}`);
 
-        // ========== SPECIAL HANDLING FOR AVIATOR GAMES ==========
-        if (isAviatorGame && transactionData.bet_type === 'SETTLE') {
-          console.log("------------------------------AVIATOR GAME SETTLE------------------------------");
+        // SIMPLE CONDITION 1: User loses the bet
+        if (!isWin) {
+          console.log("🎯 CONDITION 1: User LOST the bet");
           
-          // For Aviator, we calculate commission based on the net win amount
-          if (isUserWin && affiliatedeposit <= 0) {
-            // User won in Aviator - calculate commission on net win
-            commissionAmount = (netAmount * affiliate.commissionRate) / 100;
-            commissionType = 'aviator_win_commission';
-            description = `Commission from user ${user.username}'s Aviator win`;
-            status = 'pending';
-            metadataNotes = `Commission from Aviator net win of ${netAmount} BDT`;
+          // Check if affiliate deposit is enough for this bet
+          if (affiliatedeposit >= betAmount) {
+            // Calculate commission on bet amount
+            commissionAmount = (betAmount * affiliate.commissionRate) / 100;
+            commissionType = 'loss_commission';
             
-            // Update affiliate earnings
+            // Add commission to affiliate's pending balance
             affiliate.pendingEarnings = parseFloat((affiliate.pendingEarnings + commissionAmount).toFixed(4));
             affiliate.totalEarnings = parseFloat((affiliate.totalEarnings + commissionAmount).toFixed(4));
             
-            console.log(`✅ Aviator win commission: ${affiliate.commissionRate}% of ${netAmount} BDT = ${commissionAmount} BDT`);
-            
-          }
-        }
-        // ========== REGULAR GAMES (YOUR EXISTING CODE) ==========
-        else {
-          // CASE 1: User loses AND has positive affiliatedeposit (Regular games)
-          if (isUserLose && affiliatedeposit > 0) {
-            console.log("------------------------------REGULAR GAME LOSE BET------------------------------");
-            // Calculate commission with precise decimal - NO ROUNDING
-            commissionAmount = (betAmountForCommission * affiliate.commissionRate) / 100;
-            commissionType = 'bet_commission';
-            description = `Commission from user ${user.username}'s losing bet`;
-            metadataNotes = `Commission from losing bet of ${betAmountForCommission} BDT`;
-
-            // Update affiliate earnings with precise amounts
-            affiliate.pendingEarnings = parseFloat((affiliate.pendingEarnings + commissionAmount).toFixed(4));
-            affiliate.totalEarnings = parseFloat((affiliate.totalEarnings + commissionAmount).toFixed(4));
-
-            // Reduce affiliatedeposit
-            const newAffiliateDeposit = Math.max(0, affiliatedeposit - betAmountForCommission);
-            user.affiliatedeposit = newAffiliateDeposit;
+            // Reduce user's affiliate deposit by the bet amount
+            user.affiliatedeposit = affiliatedeposit - betAmount;
             await user.save();
-
-          }
-          // CASE 2: User wins AND affiliatedeposit is depleted (Regular games)
-          else if (isUserWin && affiliatedeposit <= 0) {
-            console.log("------------------------------REGULAR GAME WIN BET------------------------------");
-
-            // Calculate commission based on net win with precise decimal - NO ROUNDING
-            commissionAmount = (netAmount * affiliate.commissionRate) / 100;
-            commissionType = 'bet_deduction';
-            description = `Deduction from user ${user.username}'s winning bet`;
-            status = 'cancelled';
-            metadataNotes = `Deduction from net win of ${netAmount} BDT`;
-
-            // Update affiliate minusBalance with precise amount
-            affiliate.minusBalance = parseFloat((affiliate.minusBalance + commissionAmount).toFixed(4));
+            
+            console.log(`✅ Commission added to affiliate: ${commissionAmount} BDT (${affiliate.commissionRate}% of ${betAmount})`);
+            console.log(`   Affiliate deposit reduced: ${affiliatedeposit} → ${user.affiliatedeposit}`);
+          } else {
+            console.log(`ℹ️ No commission: Affiliate deposit (${affiliatedeposit}) is less than bet amount (${betAmount})`);
           }
         }
+        
+        // SIMPLE CONDITION 2: User wins the bet AND affiliate deposit is 0 or negative
+        else if (isWin && affiliatedeposit <= 0) {
+          console.log("🎯 CONDITION 2: User WON the bet and affiliate deposit is depleted");
+          
+          // Calculate commission on NET win amount
+          commissionAmount = (netAmount * affiliate.commissionRate) / 100;
+          commissionType = 'win_deduction';
+          
+          // Add to affiliate's minus balance (deduction)
+          affiliate.minusBalance = parseFloat((affiliate.minusBalance + commissionAmount).toFixed(4));
+          
+          console.log(`✅ Deduction added to affiliate minus balance: ${commissionAmount} BDT (${affiliate.commissionRate}% of net win ${netAmount})`);
+        }
+        
+        // SIMPLE CONDITION 3: User wins the bet BUT affiliate deposit still positive
+        else if (isWin && affiliatedeposit > 0) {
+          console.log("🎯 CONDITION 3: User WON the bet but affiliate deposit still available");
+          
+          // For wins with positive affiliate deposit: NO commission
+          console.log(`ℹ️ No commission: User won but affiliate deposit (${affiliatedeposit}) is still positive`);
+        }
 
-        // Create earnings history if commission calculated
+        // Save commission record if commission was calculated
         if (commissionAmount > 0) {
           const earningsRecord = {
-            amount: commissionAmount, // Keep full precision
+            amount: commissionAmount,
             type: commissionType,
-            description: description,
-            status: status,
+            description: commissionType === 'loss_commission' 
+              ? `Commission from user ${user.username}'s losing bet` 
+              : `Deduction from user ${user.username}'s winning bet`,
+            status: commissionType === 'loss_commission' ? 'pending' : 'cancelled',
             referredUser: user._id,
             sourceId: bettingHistory._id,
             sourceType: 'bet',
             commissionRate: affiliate.commissionRate,
-            sourceAmount: isAviatorGame ? 
-                         (commissionType.includes('win') ? netAmount : betAmountForCommission) :
-                         (isUserLose ? betAmountForCommission : netAmount),
+            sourceAmount: commissionType === 'loss_commission' ? betAmount : netAmount,
             calculatedAmount: commissionAmount,
             earnedAt: new Date(),
             metadata: {
@@ -2655,29 +2638,19 @@ Userrouter.post("/callback-data-game", async (req, res) => {
               gameName: transactionData.game_name,
               provider: transactionData.provider_code,
               currency: 'BDT',
-              notes: metadataNotes,
-              isDeduction: commissionType === 'bet_deduction',
-              userWon: isUserWin,
-              userLost: isUserLose,
+              userWon: isWin,
+              userLost: !isWin,
               affiliatedepositBefore: affiliatedeposit,
               affiliatedepositAfter: user.affiliatedeposit,
               netWinAmount: netAmount,
               totalWinAmount: winAmount,
               betAmount: betAmount,
-              commissionCalculated: `${affiliate.commissionRate}% of ${
-                isAviatorGame ? 
-                  (commissionType.includes('win') ? `net win ${netAmount}` : `bet ${betAmountForCommission}`) :
-                  (isUserLose ? `bet ${betAmountForCommission}` : `net win ${netAmount}`)
-              } = ${commissionAmount}`,
-              isAviatorGame: isAviatorGame,
-              aviatorCommissionType: isAviatorGame ? commissionType : 'N/A'
+              condition: commissionType === 'loss_commission' ? 'Loss with enough deposit' : 'Win with depleted deposit'
             }
           };
 
           affiliate.earningsHistory.push(earningsRecord);
           await affiliate.save();
-          
-          console.log(`   - Commission recorded: ${commissionType} - ${commissionAmount} BDT`);
         }
       }
     }
@@ -2699,15 +2672,17 @@ Userrouter.post("/callback-data-game", async (req, res) => {
         processing_format: 'new',
         has_affiliate_code: hasAffiliateCode,
         is_win: isWin,
-        is_aviator_game: isAviatorGame,
-        commission_applied: commissionAmount > 0 ? 'yes' : 'no'
+        commission_applied: commissionAmount > 0 ? 'yes' : 'no',
+        commission_amount: commissionAmount,
+        commission_type: commissionType || 'none',
+        user_affiliate_deposit: user.affiliatedeposit
       }
     };
 
-    console.log(`✅ Transaction completed successfully for user: ${processedUsername}`);
-    console.log(`   - Game: ${transactionData.game_name} (Aviator: ${isAviatorGame ? 'YES' : 'NO'})`);
+    console.log(`✅ Transaction completed for user: ${processedUsername}`);
     console.log(`   - Bet: ${betAmount}, Win: ${winAmount}, Net: ${netAmount}`);
     console.log(`   - Balance: ${balanceBefore} → ${updatedUser.balance}`);
+    console.log(`   - Commission: ${commissionAmount > 0 ? `${commissionAmount} BDT (${commissionType})` : 'None'}`);
     
     res.json(responseData);
 
