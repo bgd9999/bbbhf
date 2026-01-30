@@ -1020,32 +1020,32 @@ UserSchema.methods.getAvailableBonusOffers = function() {
 };
 
 // ========== DEPOSIT METHODS ==========
-UserSchema.methods.createDeposit = async function({ method, amount, bonusType = 'none' }) {
-    if (amount < BONUS_CONFIG.MIN_DEPOSIT_AMOUNT || amount > BONUS_CONFIG.MAX_DEPOSIT_AMOUNT) {
-        throw new Error(`Deposit amount must be between ${BONUS_CONFIG.MIN_DEPOSIT_AMOUNT} and ${BONUS_CONFIG.MAX_DEPOSIT_AMOUNT} BDT`);
-    }
+// UserSchema.methods.createDeposit = async function({ method, amount, bonusType = 'none' }) {
+//     if (amount < BONUS_CONFIG.MIN_DEPOSIT_AMOUNT || amount > BONUS_CONFIG.MAX_DEPOSIT_AMOUNT) {
+//         throw new Error(`Deposit amount must be between ${BONUS_CONFIG.MIN_DEPOSIT_AMOUNT} and ${BONUS_CONFIG.MAX_DEPOSIT_AMOUNT} BDT`);
+//     }
 
-    if (bonusType !== 'none') {
-        if (bonusType === 'first_deposit' && !this.isEligibleForFirstDepositBonus()) {
-            throw new Error('Not eligible for first deposit bonus');
-        }
-        if (bonusType === 'special_bonus' && !this.isEligibleForSpecialBonus()) {
-            throw new Error('Not eligible for special bonus');
-        }
-    }
+//     if (bonusType !== 'none') {
+//         if (bonusType === 'first_deposit' && !this.isEligibleForFirstDepositBonus()) {
+//             throw new Error('Not eligible for first deposit bonus');
+//         }
+//         if (bonusType === 'special_bonus' && !this.isEligibleForSpecialBonus()) {
+//             throw new Error('Not eligible for special bonus');
+//         }
+//     }
 
-    const deposit = {
-        method,
-        amount,
-        status: 'pending',
-        bonusType,
-        orderId: `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-    };
+//     const deposit = {
+//         method,
+//         amount,
+//         status: 'pending',
+//         bonusType,
+//         orderId: `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+//     };
 
-    this.depositHistory.push(deposit);
-    await this.save();
-    return deposit;
-};
+//     this.depositHistory.push(deposit);
+//     await this.save();
+//     return deposit;
+// };
 
 UserSchema.methods.completeDeposit = async function(orderId, transactionId) {
     const deposit = this.depositHistory.find(d => d.orderId === orderId && d.status === 'pending');
