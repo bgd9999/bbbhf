@@ -555,7 +555,6 @@ depositHistory: [{
     amount: {
         type: Number,
         required: true,
-        min: BONUS_CONFIG.MIN_DEPOSIT_AMOUNT
     },
     status: { 
         type: String, 
@@ -1047,67 +1046,67 @@ UserSchema.methods.createDeposit = async function({ method, amount, bonusType = 
     return deposit;
 };
 
-// UserSchema.methods.completeDeposit = async function(orderId, transactionId) {
-//     const deposit = this.depositHistory.find(d => d.orderId === orderId && d.status === 'pending');
+UserSchema.methods.completeDeposit = async function(orderId, transactionId) {
+    const deposit = this.depositHistory.find(d => d.orderId === orderId && d.status === 'pending');
     
-//     if (!deposit) {
-//         throw new Error('Pending deposit not found');
-//     }
+    if (!deposit) {
+        throw new Error('Pending deposit not found');
+    }
 
-//     let bonusAmount = 0;
-//     if (deposit.bonusType !== 'none') {
-//         bonusAmount = this.calculateBonusAmount(deposit.amount, deposit.bonusType);
-//     }
+    let bonusAmount = 0;
+    if (deposit.bonusType !== 'none') {
+        bonusAmount = this.calculateBonusAmount(deposit.amount, deposit.bonusType);
+    }
 
-//     deposit.status = 'completed';
-//     deposit.transactionId = transactionId;
-//     deposit.completedAt = new Date();
-//     deposit.bonusAmount = bonusAmount;
-//     deposit.bonusApplied = bonusAmount > 0;
+    deposit.status = 'completed';
+    deposit.transactionId = transactionId;
+    deposit.completedAt = new Date();
+    deposit.bonusAmount = bonusAmount;
+    deposit.bonusApplied = bonusAmount > 0;
 
-//     this.balance += deposit.amount;
-//     this.total_deposit += deposit.amount;
+    this.balance += deposit.amount;
+    this.total_deposit += deposit.amount;
 
-//     // Award affiliate commission for deposit
-//     if (this.affiliateReferral) {
-//         await this.awardAffiliateCommission(deposit.amount, 'deposit');
-//     }
+    // Award affiliate commission for deposit
+    if (this.affiliateReferral) {
+        await this.awardAffiliateCommission(deposit.amount, 'deposit');
+    }
 
-//     if (bonusAmount > 0) {
-//         this.bonusBalance += bonusAmount;
+    if (bonusAmount > 0) {
+        this.bonusBalance += bonusAmount;
 
-//         // Log bonus activity
-//         this.bonusActivityLogs.push({
-//             bonusType: deposit.bonusType,
-//             bonusAmount: bonusAmount,
-//             depositAmount: deposit.amount,
-//             activatedAt: new Date()
-//         });
+        // Log bonus activity
+        this.bonusActivityLogs.push({
+            bonusType: deposit.bonusType,
+            bonusAmount: bonusAmount,
+            depositAmount: deposit.amount,
+            activatedAt: new Date()
+        });
 
-//         this.bonusInfo.activeBonuses.push({
-//             bonusType: deposit.bonusType,
-//             amount: bonusAmount,
-//             originalAmount: bonusAmount,
-//             wageringRequirement: BONUS_CONFIG.WAGERING_REQUIREMENT
-//         });
+        this.bonusInfo.activeBonuses.push({
+            bonusType: deposit.bonusType,
+            amount: bonusAmount,
+            originalAmount: bonusAmount,
+            wageringRequirement: BONUS_CONFIG.WAGERING_REQUIREMENT
+        });
 
-//         if (deposit.bonusType === 'first_deposit' && !this.bonusInfo.firstDepositBonusClaimed) {
-//             this.bonusInfo.firstDepositBonusClaimed = true;
-//         }
-//     }
+        if (deposit.bonusType === 'first_deposit' && !this.bonusInfo.firstDepositBonusClaimed) {
+            this.bonusInfo.firstDepositBonusClaimed = true;
+        }
+    }
 
-//     this.transactionHistory.push({
-//         type: 'deposit',
-//         amount: deposit.amount,
-//         balanceBefore: this.balance - deposit.amount,
-//         balanceAfter: this.balance,
-//         description: `Deposit via ${deposit.method}`,
-//         referenceId: transactionId
-//     });
+    this.transactionHistory.push({
+        type: 'deposit',
+        amount: deposit.amount,
+        balanceBefore: this.balance - deposit.amount,
+        balanceAfter: this.balance,
+        description: `Deposit via ${deposit.method}`,
+        referenceId: transactionId
+    });
 
-//     await this.save();
-//     return deposit;
-// };
+    await this.save();
+    return deposit;
+};
 
 // ========== BONUS WAGERING METHODS ==========
 UserSchema.methods.applyBetToWagering = async function(amount) {
