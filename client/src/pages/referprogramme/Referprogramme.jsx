@@ -1,11 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { Header } from "../../components/header/Header";
 import Footer from "../../components/footer/Footer";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { Toaster, toast } from "react-hot-toast";
+import axios from "axios";
 
 const Referprogramme = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const base_url = import.meta.env.VITE_API_KEY_Base_URL;
 
   const bonusHistory = [
     { name: "**antokhan**", amount: "21.85 BDT", date: "2026-02-01 01:07:23" },
@@ -17,12 +22,123 @@ const Referprogramme = () => {
     { name: "**8127658**", amount: "23.24 BDT", date: "2026-02-01 01:07:25" },
   ];
 
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("usertoken");
+      const userinfo = JSON.parse(localStorage.getItem("user"));
+      
+      if (!token) {
+        toast.error("Authentication required. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${base_url}/api/user/all-information/${userinfo.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setUserData(response.data.data);
+      } else {
+        toast.error(response.data.message || "Failed to fetch user data");
+      }
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      toast.error(err.response?.data?.message || "Internal server error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyReferralLink = () => {
+    if (!userData?.referralCode) {
+      toast.error("Referral code not available. Please try again.");
+      return;
+    }
+
+    const referralLink = `https://bajiman.com/register?ref=${userData.referralCode}`;
+    
+    // Try to use the Web Share API first
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join me on Bajiman!',
+        text: `Use my referral code ${userData.referralCode} to sign up and get bonus!`,
+        url: referralLink,
+      })
+      .then(() => toast.success('Shared successfully!'))
+      .catch((error) => {
+        console.log('Sharing failed:', error);
+        // Fallback to clipboard copy
+        copyToClipboard(referralLink);
+      });
+    } else {
+      // Fallback to clipboard copy
+      copyToClipboard(referralLink);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast.success(
+          <div className="flex flex-col items-start">
+            <span className="font-semibold">Referral link copied!</span>
+            <span className="text-xs text-gray-300 truncate max-w-[200px]">{text}</span>
+          </div>,
+          {
+            duration: 3000,
+            icon: '📋',
+            style: {
+              background: '#1a1a1a',
+              color: '#fff',
+              border: '1px solid #333',
+            },
+          }
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to copy:', err);
+        toast.error('Failed to copy referral link');
+      });
+  };
+
   return (
-    <div className="min-h-screen font-poppins bg-[#0a0a0a] text-white">
+    <div className="h-screen overflow-hidden font-poppins bg-[#141515] text-gray-300">
+      {/* Toast Container */}
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid #333',
+            borderRadius: '8px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+
       <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="flex">
-        <Sidebar sidebarOpen={sidebarOpen} />
 
         <div className="flex-1 h-[calc(100vh-56px)] overflow-y-auto custom-scrollbar pb-20 relative">
           
@@ -168,8 +284,11 @@ const Referprogramme = () => {
           </div>
           
           {/* STICKY FOOTER BUTTON */}
-          <div className=" p-4 bg-[#0a0a0a]/80 backdrop-blur-md z-50 flex justify-center">
-             <button className="bg-[#008d5d] hover:bg-[#00a870] text-white font-bold py-3 px-20 rounded shadow-xl transition-all uppercase text-sm">
+          <div className="p-4  backdrop-blur-md z-50 flex justify-center">
+             <button 
+               onClick={copyReferralLink}
+               className="bg-[#008d5d] hover:bg-[#00a870] text-white font-bold py-3 px-20 rounded shadow-xl transition-all uppercase text-sm active:scale-[0.98]"
+             >
                 Refer a friend now
              </button>
           </div>
