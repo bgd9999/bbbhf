@@ -4000,6 +4000,7 @@ if (hasAffiliateCode) {
       if (affiliate.pendingEarnings >= commissionAmount) {
         // CASE 2A: Affiliate has enough balance - deduct from balance
         affiliate.pendingEarnings -= commissionAmount;
+        affiliate.totalEarnings -= commissionAmount;
         status = 'deducted';
         console.log(`✅ SETTLE: Commission ${commissionAmount} BDT deducted from affiliate balance for winning bet`);
       } else {
