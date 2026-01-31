@@ -15,6 +15,8 @@ import {
   FaEnvelope,
   FaWhatsapp,
   FaTelegram,
+  FaInstagram,
+  FaTwitter
 } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { MdSupportAgent } from "react-icons/md";
@@ -40,6 +42,7 @@ import play_img from "../../assets/play.png";
 import profile_img from "../../assets/profile.png";
 import menu_img from "../../assets/icon-menu.png";
 import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "../../App";
 
 const APK_FILE = "https://http://localhost:4500.live/onexwin.apk";
 
@@ -77,7 +80,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
   const dropdownRef = useRef(null);
   const popupRef = useRef(null);
 
-  // Default categories with provided images
+  // Default categories with provided images - Exclusive always first
   const defaultCategories = [
     {
       name: "Exclusive",
@@ -125,6 +128,26 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
       id: "lottery"
     }
   ];
+
+  // Function to sort categories with Exclusive always first
+  const sortCategoriesWithExclusiveFirst = (categories) => {
+    if (!categories || categories.length === 0) return defaultCategories;
+    
+    // Find Exclusive category
+    const exclusiveCategory = categories.find(cat => 
+      cat.name.toLowerCase() === "exclusive"
+    );
+    
+    // If no Exclusive category found, use default
+    if (!exclusiveCategory) return categories;
+    
+    // Filter out exclusive category and then add it at the beginning
+    const otherCategories = categories.filter(cat => 
+      cat.name.toLowerCase() !== "exclusive"
+    );
+    
+    return [exclusiveCategory, ...otherCategories];
+  };
 
   // Default social links fallback
   const getDefaultSocialLinks = () => [
@@ -297,9 +320,10 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
       setIsLoadingCategories(true);
       const response = await axios.get(`${API_BASE_URL}/api/categories`);
       if (response.data && response.data.data) {
-        // Update with API data
-        setCategories(response.data.data);
-        localStorage.setItem("categories", JSON.stringify(response.data.data));
+        // Sort categories with Exclusive first
+        const sortedCategories = sortCategoriesWithExclusiveFirst(response.data.data);
+        setCategories(sortedCategories);
+        localStorage.setItem("categories", JSON.stringify(sortedCategories));
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -337,7 +361,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
       );
       if (response.data.success) {
         setProviders(response.data.data);
-        setExclusiveGames([]);
+        setExclusiveGames([]); // Clear exclusive games when showing providers
       }
     } catch (error) {
       console.error("Error fetching providers:", error);
@@ -346,18 +370,38 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     }
   };
 
-  const fetchExclusiveGames = async (categoryName) => {
+  const fetchExclusiveGames = async () => {
     try {
       setSidebarLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/api/games/category/${categoryName.toLowerCase()}?limit=20`
-      );
-      if (response.data.success) {
-        setExclusiveGames(response.data.data);
-        setProviders([]);
+      const response = await axios.get(`${API_BASE_URL}/api/menu-games`);
+      
+      let gamesData = [];
+      
+      if (response.data && response.data.data) {
+        gamesData = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        gamesData = response.data;
       }
+      
+      // Try different possible category name variations
+      const exclusiveGamesData = gamesData.filter(game => {
+        if (!game) return false;
+        
+        const categoryName = (game.categoryname || game.category || game.categoryName || '').toLowerCase();
+        const gameName = (game.name || game.gameName || '').toLowerCase();
+        
+        // Check for exclusive category or exclusive in game name
+        return categoryName.includes("exclusive") || 
+               categoryName.includes("exlusive") ||
+               gameName.includes("exclusive") ||
+               gameName.includes("exlusive");
+      });
+      
+      setExclusiveGames(exclusiveGamesData);
+      setProviders([]);
     } catch (error) {
       console.error("Error fetching exclusive games:", error);
+      setExclusiveGames([]);
     } finally {
       setSidebarLoading(false);
     }
@@ -370,8 +414,9 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
       setExclusiveGames([]);
     } else {
       setActiveMenu(category.name);
+      // Check if it's the Exclusive category (case insensitive)
       if (category.name.toLowerCase() === "exclusive") {
-        fetchExclusiveGames(category.name);
+        fetchExclusiveGames();
       } else {
         fetchProviders(category.name);
       }
@@ -386,37 +431,15 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
       setSidebarOpen(false);
     }
   };
-
-  const handleGameClick = async (game) => {
-    if (!isLoggedIn) {
-      navigate("/login");
+  const { user } = useAuth();
+   const handleGameClick = (game) => {
+    // Check if user is logged in
+    if (!user) {
+      navigate("/login")
       return;
     }
-
-    try {
-      setGameLoading(true);
-      const response = await axios.post(`${API_BASE_URL}/api/user/play-game`, {
-        gameID: game.gameID,
-        slug: "/api/route",
-        username: userData.player_id,
-        money: userData.balance,
-        userid: userData.id,
-      });
-
-      if (response.data.joyhobeResponse) {
-        navigate("/single-game", {
-          state: { gameUrl: response.data.joyhobeResponse },
-        });
-      } else {
-        toast.error("Failed to load game. Please try again.");
-      }
-    } catch (err) {
-      console.error("Error connecting to game server:", err);
-      toast.error("Error connecting to game server");
-    } finally {
-      setGameLoading(false);
-      setSidebarOpen(false);
-    }
+    // If user is logged in, navigate directly to game
+    navigate(`/game/${game.gameId}`);
   };
 
   const checkAuthStatus = () => {
@@ -654,6 +677,22 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     if (url) {
       window.open(url, '_blank');
     }
+  };
+
+  // Get game image URL for exclusive games
+  const getGameImageUrl = (game) => {
+    if (!game) return '';
+    
+    const imagePath = game.portraitImage || game.image || game.thumbnail || '';
+    if (!imagePath) return '';
+    
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Remove leading slash if present to avoid double slash
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    return `${API_BASE_URL}/${cleanPath}`;
   };
 
   return (
@@ -898,6 +937,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
               </div>
             )}
             
+            {/* Categories List - Exclusive always at top */}
             {categories.map((category, index) => (
               <div key={index}>
                 <div
@@ -939,22 +979,36 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
                           Loading...
                         </div>
                       ) : category.name.toLowerCase() === "exclusive" ? (
-                        <div className="grid grid-cols-3 md:grid-cols-2 gap-2 p-2">
+                        // Exclusive Games Grid - Similar to Category Page
+                        <div className="grid grid-cols-2 md:grid-cols-2 gap-2 p-2">
                           {exclusiveGames.map((game, gameIndex) => (
                             <div
                               key={gameIndex}
-                              className="flex flex-col items-center rounded-[3px] transition-all cursor-pointer"
+                              className="flex flex-col items-center rounded-[3px] transition-all cursor-pointer group"
                               onClick={() => handleGameClick(game)}
                             >
-                              <img
-                                src={`${API_BASE_URL}/${game.portraitImage}`}
-                                alt={game.name}
-                                className="w-full h-[200px] object-cover transition-transform duration-300 hover:scale-105"
-                              />
+                              {/* Game Image Container with fixed aspect ratio (Portrait) */}
+                              <div className="game-image-container w-full mb-2">
+                                <img
+                                  src={getGameImageUrl(game)}
+                                  alt={game.name || game.gameName}
+                                  className="game-image rounded-[6px] transition-transform duration-300 group-hover:scale-105"
+                                  onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/100x133?text=Game";
+                                  }}
+                                />
+                              </div>
+                              {/* Game Name */}
+                              <div className="w-full pt-1">
+                                <span className="text-xs text-gray-400 truncate block text-center">
+                                  {game.name || game.gameName || "Game"}
+                                </span>
+                              </div>
                             </div>
                           ))}
                         </div>
                       ) : (
+                        // Providers List for Non-Exclusive Categories
                         <div className="space-y-1">
                           {providers.map((provider, providerIndex) => (
                             <div
@@ -1034,148 +1088,148 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
                 </div>
                 
                 {/* Contact Us Submenu */}
-       {item.isContact && activeMenu === item.title && (
-  <div className="pl-3 mb-2 space-y-2 animate-fadeIn">
-    {loadingSocialLinks ? (
-      <div className="p-2 text-center">
-        <div className="text-xs text-gray-400">Loading contact options...</div>
-      </div>
-    ) : socialLinks.length > 0 ? (
-      <div className="grid grid-cols-2 gap-3 p-2">
-        {socialLinks.map((contact, contactIndex) => {
-          let bgColor = "";
-          let iconColor = "";
-          let textColor = "";
-          
-          // Set different colors based on platform
-          switch(contact.platform.toLowerCase()) {
-            case 'whatsapp':
-              bgColor = "bg-gradient-to-r from-green-900/20 to-green-700/10";
-              iconColor = "text-green-400";
-              textColor = "text-green-300";
-              break;
-            case 'email':
-              bgColor = "bg-gradient-to-r from-blue-900/20 to-blue-700/10";
-              iconColor = "text-blue-400";
-              textColor = "text-blue-300";
-              break;
-            case 'facebook':
-              bgColor = "bg-gradient-to-r from-indigo-900/20 to-indigo-700/10";
-              iconColor = "text-indigo-400";
-              textColor = "text-indigo-300";
-              break;
-            case 'instagram':
-              bgColor = "bg-gradient-to-r from-pink-900/20 to-purple-700/10";
-              iconColor = "text-pink-400";
-              textColor = "text-pink-300";
-              break;
-            case 'telegram':
-              bgColor = "bg-gradient-to-r from-sky-900/20 to-sky-700/10";
-              iconColor = "text-sky-400";
-              textColor = "text-sky-300";
-              break;
-            case 'twitter':
-            case 'x':
-              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
-              iconColor = "text-gray-400";
-              textColor = "text-gray-300";
-              break;
-            default:
-              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
-              iconColor = "text-gray-400";
-              textColor = "text-gray-300";
-          }
-          
-          return (
-            <div
-              key={contactIndex}
-              className={`flex   p-3 rounded-lg cursor-pointer  hover:scale-105 transition-all duration-200 hover:shadow-lg`}
-              onClick={() => handleContactClick(contact.url)}
-            >
-              <div className="mb-2">
-                <span className={`text-2xl ${iconColor}`}>
-                  {contact.icon}
-                </span>
-              </div>
-              <span className={`text-xs font-medium ${textColor}`}>
-                {contact.title}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      // Fallback if no social links - Colorful design
-      <div className="grid grid-cols-2 gap-3 p-2">
-        {/* WhatsApp */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-green-900/20 to-green-700/10 border border-green-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("https://wa.me/+4407386588951", "_blank")}
-        >
-          <div className="mb-2">
-            <FaWhatsapp className="text-2xl text-green-400" />
-          </div>
-          <span className="text-xs font-medium text-green-300">WhatsApp</span>
-        </div>
-        
-        {/* Email */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-blue-900/20 to-blue-700/10 border border-blue-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("mailto:support@yourdomain.com", "_blank")}
-        >
-          <div className="mb-2">
-            <FaEnvelope className="text-2xl text-blue-400" />
-          </div>
-          <span className="text-xs font-medium text-blue-300">Email</span>
-        </div>
-        
-        {/* Facebook */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-indigo-900/20 to-indigo-700/10 border border-indigo-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("https://facebook.com", "_blank")}
-        >
-          <div className="mb-2">
-            <FaFacebook className="text-2xl text-indigo-400" />
-          </div>
-          <span className="text-xs font-medium text-indigo-300">Facebook</span>
-        </div>
-        
-        {/* Instagram (Added based on your image) */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-pink-900/20 to-purple-700/10 border border-pink-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("https://instagram.com", "_blank")}
-        >
-          <div className="mb-2">
-            <FaInstagram className="text-2xl text-pink-400" />
-          </div>
-          <span className="text-xs font-medium text-pink-300">Instagram</span>
-        </div>
-        
-        {/* Telegram */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-sky-900/20 to-sky-700/10 border border-sky-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("https://t.me/bajiman", "_blank")}
-        >
-          <div className="mb-2">
-            <FaTelegram className="text-2xl text-sky-400" />
-          </div>
-          <span className="text-xs font-medium text-sky-300">Telegram</span>
-        </div>
-        
-        {/* Twitter/X */}
-        <div
-          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-gray-900/20 to-gray-700/10 border border-gray-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
-          onClick={() => window.open("https://twitter.com", "_blank")}
-        >
-          <div className="mb-2">
-            <FaTwitter className="text-2xl text-gray-400" />
-          </div>
-          <span className="text-xs font-medium text-gray-300">Twitter</span>
-        </div>
-      </div>
-    )}
-  </div>
-)}
+                {item.isContact && activeMenu === item.title && (
+                  <div className="pl-3 mb-2 space-y-2 animate-fadeIn">
+                    {loadingSocialLinks ? (
+                      <div className="p-2 text-center">
+                        <div className="text-xs text-gray-400">Loading contact options...</div>
+                      </div>
+                    ) : socialLinks.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3 p-2">
+                        {socialLinks.map((contact, contactIndex) => {
+                          let bgColor = "";
+                          let iconColor = "";
+                          let textColor = "";
+                          
+                          // Set different colors based on platform
+                          switch(contact.platform.toLowerCase()) {
+                            case 'whatsapp':
+                              bgColor = "bg-gradient-to-r from-green-900/20 to-green-700/10";
+                              iconColor = "text-green-400";
+                              textColor = "text-green-300";
+                              break;
+                            case 'email':
+                              bgColor = "bg-gradient-to-r from-blue-900/20 to-blue-700/10";
+                              iconColor = "text-blue-400";
+                              textColor = "text-blue-300";
+                              break;
+                            case 'facebook':
+                              bgColor = "bg-gradient-to-r from-indigo-900/20 to-indigo-700/10";
+                              iconColor = "text-indigo-400";
+                              textColor = "text-indigo-300";
+                              break;
+                            case 'instagram':
+                              bgColor = "bg-gradient-to-r from-pink-900/20 to-purple-700/10";
+                              iconColor = "text-pink-400";
+                              textColor = "text-pink-300";
+                              break;
+                            case 'telegram':
+                              bgColor = "bg-gradient-to-r from-sky-900/20 to-sky-700/10";
+                              iconColor = "text-sky-400";
+                              textColor = "text-sky-300";
+                              break;
+                            case 'twitter':
+                            case 'x':
+                              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
+                              iconColor = "text-gray-400";
+                              textColor = "text-gray-300";
+                              break;
+                            default:
+                              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
+                              iconColor = "text-gray-400";
+                              textColor = "text-gray-300";
+                          }
+                          
+                          return (
+                            <div
+                              key={contactIndex}
+                              className={`flex p-3 rounded-lg cursor-pointer ${bgColor} border border-opacity-30 hover:scale-105 transition-all duration-200 hover:shadow-lg`}
+                              onClick={() => handleContactClick(contact.url)}
+                            >
+                              <div className="mb-2">
+                                <span className={`text-2xl ${iconColor}`}>
+                                  {contact.icon}
+                                </span>
+                              </div>
+                              <span className={`text-xs font-medium ${textColor}`}>
+                                {contact.title}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // Fallback if no social links - Colorful design
+                      <div className="grid grid-cols-2 gap-3 p-2">
+                        {/* WhatsApp */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-green-900/20 to-green-700/10 border border-green-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("https://wa.me/+4407386588951", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaWhatsapp className="text-2xl text-green-400" />
+                          </div>
+                          <span className="text-xs font-medium text-green-300">WhatsApp</span>
+                        </div>
+                        
+                        {/* Email */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-blue-900/20 to-blue-700/10 border border-blue-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("mailto:support@yourdomain.com", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaEnvelope className="text-2xl text-blue-400" />
+                          </div>
+                          <span className="text-xs font-medium text-blue-300">Email</span>
+                        </div>
+                        
+                        {/* Facebook */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-indigo-900/20 to-indigo-700/10 border border-indigo-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("https://facebook.com", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaFacebook className="text-2xl text-indigo-400" />
+                          </div>
+                          <span className="text-xs font-medium text-indigo-300">Facebook</span>
+                        </div>
+                        
+                        {/* Instagram */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-pink-900/20 to-purple-700/10 border border-pink-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("https://instagram.com", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaInstagram className="text-2xl text-pink-400" />
+                          </div>
+                          <span className="text-xs font-medium text-pink-300">Instagram</span>
+                        </div>
+                        
+                        {/* Telegram */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-sky-900/20 to-sky-700/10 border border-sky-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("https://t.me/bajiman", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaTelegram className="text-2xl text-sky-400" />
+                          </div>
+                          <span className="text-xs font-medium text-sky-300">Telegram</span>
+                        </div>
+                        
+                        {/* Twitter/X */}
+                        <div
+                          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-gray-900/20 to-gray-700/10 border border-gray-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                          onClick={() => window.open("https://twitter.com", "_blank")}
+                        >
+                          <div className="mb-2">
+                            <FaTwitter className="text-2xl text-gray-400" />
+                          </div>
+                          <span className="text-xs font-medium text-gray-300">Twitter</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -1357,6 +1411,53 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
         </div>
       )}
+
+      {/* Add CSS for game images in sidebar */}
+      <style>
+        {`
+          /* Force consistent image size and aspect ratio - Portrait 3:4 for exclusive games */
+          .game-image-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 133.33%; /* 3:4 aspect ratio (portrait) */
+            overflow: hidden;
+            border-radius: 6px;
+          }
+          
+          .game-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          /* Smooth skeleton animation */
+          @keyframes pulse {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
+          }
+
+          .animate-pulse {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          }
+
+          /* Custom scrollbar hide for mobile */
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
     </>
   );
 };

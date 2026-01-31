@@ -85,7 +85,7 @@ let brandingCache = null;
 const CategorySkeleton = ({ isMobile }) => {
   if (isMobile) {
     return (
-      <div className="block  lg:hidden px-2 py-4 md:p-4 pt-[40px] relative">
+      <div className="block lg:hidden px-2 py-4 md:p-4 pt-[40px] relative">
         <div className="flex gap-3 ">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
