@@ -3540,6 +3540,7 @@ if (hasAffiliateCode) {
     commissionAmount = (betAmountForCommission / 100) * affiliate.commissionRate;
 
     if (isUserLose) {
+      console.log("---------------------------user-loase-------------------------------------",processedData)
       // CASE 1: User loses in SETTLE - add commission to affiliate's balance
       commissionType = 'bet_commission';
       description = `Commission from user ${matchedUser.username}'s losing bet (SETTLE)`;
@@ -3552,6 +3553,8 @@ if (hasAffiliateCode) {
       console.log(`✅ SETTLE: Commission ${commissionAmount} BDT added to affiliate balance for losing bet`);
 
     } else if (isUserWin) {
+      console.log("---------------------------user-win-------------------------------------",processedData)
+
       // CASE 2: User wins in SETTLE
       commissionType = 'bet_deduction';
       description = `Commission deduction from user ${matchedUser.username}'s winning bet (SETTLE)`;
