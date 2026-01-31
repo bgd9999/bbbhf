@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaUpload, FaTimes, FaSpinner, FaFilter, FaGamepad, FaSave } from "react-icons/fa";
+import { FaUpload, FaTimes, FaSpinner, FaFilter, FaGamepad, FaSearch } from "react-icons/fa";
 import { MdCategory, MdCheckBox, MdCheckBoxOutlineBlank } from "react-icons/md";
 import Header from "../../components/Header";
 import Sidebar from "../../components/Sidebar";
@@ -13,8 +13,10 @@ const Newgames = () => {
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState("");
   const [games, setGames] = useState([]);
+  const [filteredGames, setFilteredGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [loadingGames, setLoadingGames] = useState(false);
@@ -149,6 +151,42 @@ const Newgames = () => {
     </div>
   );
 
+  // Search Component
+  const SearchBar = () => (
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <FaSearch className="h-5 w-5 text-gray-400" />
+      </div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search games by name..."
+        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+      />
+      {searchTerm && (
+        <button
+          onClick={() => setSearchTerm("")}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+        >
+          <FaTimes className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+        </button>
+      )}
+    </div>
+  );
+
+  // Function to filter games based on search term
+  const filterGamesBySearch = (gamesList, term) => {
+    if (!term.trim()) return gamesList;
+    
+    const searchTermLower = term.toLowerCase();
+    return gamesList.filter(game => 
+      game.name.toLowerCase().includes(searchTermLower) ||
+      (game.provider?.name?.toLowerCase().includes(searchTermLower) || false) ||
+      (game.category?.name?.toLowerCase().includes(searchTermLower) || false)
+    );
+  };
+
   // Fetch categories from local API
   useEffect(() => {
     const fetchCategories = async () => {
@@ -210,85 +248,101 @@ const Newgames = () => {
     fetchAndMergeProviders();
   }, []);
 
+  // Function to fetch all games from local database
+  const fetchAllLocalGames = async () => {
+    try {
+      const response = await fetch(`${base_url}/api/admin/games/all`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch local games');
+      }
+      const localGames = await response.json();
+      return localGames;
+    } catch (error) {
+      console.error('Error fetching local games:', error);
+      toast.error('Failed to fetch local games');
+      return [];
+    }
+  };
+
   useEffect(() => {
     if (!selectedProvider) {
       setGames([]);
+      setFilteredGames([]);
+      setSearchTerm(""); // Clear search when provider is cleared
       return;
     }
 
-    const fetchAndMergeGames = async () => {
+    const fetchAndFilterGames = async () => {
       setLoadingGames(true);
+      setSearchTerm(""); // Clear search when loading new provider
       try {
-        const [externalGamesRes, localGamesRes] = await Promise.all([
+        // Fetch all games in parallel
+        const [externalGamesRes, localGames] = await Promise.all([
           fetch(
             `https://apigames.oracleapi.net/api/games/pagination?limit=2000&provider=${selectedProvider}`,
             { headers: { "x-api-key": premium_api_key } }
           ),
-          fetch(`${base_url}/api/admin/games/all`),
+          fetchAllLocalGames()
         ]);
 
-        if (!externalGamesRes.ok || !localGamesRes.ok) {
-          toast.error("Failed to fetch games from all sources.");
+        if (!externalGamesRes.ok) {
+          toast.error("Failed to fetch games from provider.");
           return;
         }
 
         const externalGamesData = await externalGamesRes.json();
-        const localGames = await localGamesRes.json();
 
-        const localGamesMap = new Map(
-          localGames.map((game) => [game.gameApiID, game])
+        // Create a Set of gameApiIDs that already exist in local database
+        const existingGameApiIDs = new Set(
+          localGames.map((game) => game.gameApiID)
         );
 
-        const mergedGames = externalGamesData.data.map((externalGame) => {
-          const localGame = localGamesMap.get(externalGame._id);
-          if (localGame) {
-            return {
-              ...externalGame,
-              isSaved: true,
-              localId: localGame._id,
-              localFeatured: localGame.featured,
-              localStatus: localGame.status,
-              localFullScreen: localGame.fullScreen || false,
-              localCategory: localGame.category,
-              localPortraitPreview: `${base_url}${localGame.portraitImage}`,
-              localLandscapePreview: `${base_url}${localGame.landscapeImage}`,
-              localPortraitImage: null,
-              localLandscapeImage: null,
-            };
-          } else {
-            return {
-              ...externalGame,
-              isSaved: false,
-              localFeatured: false,
-              localStatus: true,
-              localFullScreen: false,
-              localCategory: selectedCategory || "",
-              localPortraitImage: null,
-              localLandscapeImage: null,
-              localPortraitPreview: null,
-              localLandscapePreview: null,
-            };
-          }
+        // Filter out games that already exist in the database
+        const newGamesOnly = externalGamesData.data.filter(
+          (externalGame) => !existingGameApiIDs.has(externalGame._id)
+        );
+
+        // Transform the games for our UI
+        const transformedGames = newGamesOnly.map((externalGame) => {
+          return {
+            ...externalGame,
+            isSaved: false, // All these games are new (not in database)
+            localFeatured: false,
+            localStatus: true,
+            localFullScreen: false,
+            localCategory: selectedCategory || "",
+            localPortraitImage: null,
+            localPortraitPreview: null,
+            localLandscapeImage: null,
+            localLandscapePreview: null,
+          };
         });
 
-        setGames(mergedGames);
+        setGames(transformedGames);
+        setFilteredGames(transformedGames); // Initially show all new games
       } catch (error) {
-        console.error("Error fetching and merging games:", error);
+        console.error("Error fetching and filtering games:", error);
         toast.error("An error occurred while fetching games.");
       } finally {
         setLoadingGames(false);
       }
     };
 
-    fetchAndMergeGames();
+    fetchAndFilterGames();
   }, [selectedProvider]);
+
+  // Apply search filter whenever games or search term changes
+  useEffect(() => {
+    const searchFiltered = filterGamesBySearch(games, searchTerm);
+    setFilteredGames(searchFiltered);
+  }, [games, searchTerm]);
 
   useEffect(() => {
     if (selectedCategory) {
       setGames(prevGames => 
         prevGames.map(game => ({
           ...game,
-          localCategory: game.isSaved ? game.localCategory : selectedCategory
+          localCategory: selectedCategory
         }))
       );
     }
@@ -302,7 +356,7 @@ const Newgames = () => {
     );
   };
 
-  const handleImageUpload = (gameApiID, type, file) => {
+  const handleImageUpload = (gameApiID, file) => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
@@ -319,19 +373,14 @@ const Newgames = () => {
       setGames((prevGames) =>
         prevGames.map((game) => {
           if (game._id === gameApiID) {
-            if (type === "portrait") {
-              return {
-                ...game,
-                localPortraitImage: file,
-                localPortraitPreview: reader.result,
-              };
-            } else {
-              return {
-                ...game,
-                localLandscapeImage: file,
-                localLandscapePreview: reader.result,
-              };
-            }
+            return {
+              ...game,
+              localPortraitImage: file,
+              localPortraitPreview: reader.result,
+              // Automatically set landscape image to the same portrait image
+              localLandscapeImage: file,
+              localLandscapePreview: reader.result,
+            };
           }
           return game;
         })
@@ -340,23 +389,17 @@ const Newgames = () => {
     reader.readAsDataURL(file);
   };
 
-  const removeImage = (gameApiID, type) => {
+  const removeImage = (gameApiID) => {
     setGames((prevGames) =>
       prevGames.map((game) => {
         if (game._id === gameApiID) {
-          if (type === "portrait") {
-            return {
-              ...game,
-              localPortraitImage: null,
-              localPortraitPreview: null,
-            };
-          } else {
-            return {
-              ...game,
-              localLandscapeImage: null,
-              localLandscapePreview: null,
-            };
-          }
+          return {
+            ...game,
+            localPortraitImage: null,
+            localPortraitPreview: null,
+            localLandscapeImage: null,
+            localLandscapePreview: null,
+          };
         }
         return game;
       })
@@ -369,10 +412,10 @@ const Newgames = () => {
     // Validation for new games
     if (
       !gameToSave.isSaved &&
-      (!gameToSave.localPortraitImage || !gameToSave.localLandscapeImage)
+      !gameToSave.localPortraitImage
     ) {
       toast.error(
-        "Please upload both portrait and landscape images for a new game."
+        "Please upload game image."
       );
       return;
     }
@@ -406,16 +449,12 @@ const Newgames = () => {
       
       if (gameToSave.localPortraitImage) {
         formData.append("portraitImage", gameToSave.localPortraitImage);
-      }
-      if (gameToSave.localLandscapeImage) {
-        formData.append("landscapeImage", gameToSave.localLandscapeImage);
+        // Also append the same image as landscape image
+        formData.append("landscapeImage", gameToSave.localPortraitImage);
       }
 
-      const isUpdate = gameToSave.isSaved;
-      const url = isUpdate
-        ? `${base_url}/api/admin/games/${gameToSave.localId}`
-        : `${base_url}/api/admin/games`;
-      const method = isUpdate ? "PUT" : "POST";
+      const url = `${base_url}/api/admin/games`;
+      const method = "POST";
       
       const response = await fetch(url, {
         method: method,
@@ -426,25 +465,12 @@ const Newgames = () => {
       
       if (response.ok) {
         toast.success(
-          `Game "${gameToSave.name}" ${
-            isUpdate ? "updated" : "added"
-          } successfully!`
+          `Game "${gameToSave.name}" added successfully!`
         );
-        setGames((prevGames) =>
-          prevGames.map((g) =>
-            g._id === gameApiID
-              ? {
-                  ...g,
-                  isSaved: true,
-                  localId: result.game._id,
-                  localCategory: result.game.category,
-                  localFullScreen: result.game.fullScreen || false,
-                  localPortraitImage: null,
-                  localLandscapeImage: null,
-                }
-              : g
-          )
-        );
+        
+        // Remove the saved game from the list
+        setGames(prevGames => prevGames.filter(g => g._id !== gameApiID));
+        
       } else {
         const errorMsg = result.error || "";
         
@@ -454,20 +480,22 @@ const Newgames = () => {
               errorMsg.includes("E11000") ||
               errorMsg.includes("already in use")) {
             toast.error(`⚠️ Game API ID "${gameToSave._id}" is already in use!`);
+            
+            // Remove this game from the list since it already exists
+            setGames(prevGames => prevGames.filter(g => g._id !== gameApiID));
+            
           } else if (errorMsg.includes("All fields are required") || 
                     errorMsg.includes("Missing required fields")) {
             toast.error(`❌ ${errorMsg}`);
           } else if (errorMsg.includes("images are required")) {
-            toast.error("❌ Both portrait and landscape images are required.");
+            toast.error("❌ Game image is required.");
           } else {
-            toast.error(`❌ ${errorMsg || `Failed to ${isUpdate ? "update" : "add"} game.`}`);
+            toast.error(`❌ ${errorMsg || `Failed to add game.`}`);
           }
         } else {
           toast.error(
             result.error ||
-              `❌ Failed to ${isUpdate ? "update" : "add"} game "${
-                gameToSave.name
-              }".`
+              `❌ Failed to add game "${gameToSave.name}".`
           );
         }
       }
@@ -478,6 +506,9 @@ const Newgames = () => {
       setSavingGameId(null);
     }
   };
+
+  // Get selected provider name for display
+  const selectedProviderName = providers.find(p => p._id === selectedProvider)?.name || "";
 
   return (
     <section className="font-nunito min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -496,17 +527,24 @@ const Newgames = () => {
                 Add New Games
               </h1>
               <p className="text-gray-600">
-                Import games from providers and customize them for your platform
+                Import games from providers that are not already in your database
               </p>
             </div>
 
             {/* Filter Card */}
-            <div className="bg-white rounded-2xl  border border-gray-200 p-6 mb-8">
-              <div className="flex items-center mb-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
+              <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Filter Games</h2>
+                {selectedProvider && (
+                  <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                    Provider: {selectedProviderName}
+                  </div>
+                )}
               </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <div>
+                  <SearchBar />
+                </div>
+             <div className="flex mt-[20px] justify-center w-full gap-[20px]">
                 <CustomSelect
                   options={providers}
                   value={selectedProvider}
@@ -518,7 +556,6 @@ const Newgames = () => {
                   setDropdownOpen={setShowProvidersDropdown}
                   label="Select Game Provider"
                 />
-                
                 <CustomSelect
                   options={categories.filter(cat => cat.status)}
                   value={selectedCategory}
@@ -530,9 +567,26 @@ const Newgames = () => {
                   setDropdownOpen={setShowCategoriesDropdown}
                   label="Default Category for New Games"
                 />
-              </div>
-              
-              {/* {selectedCategory && (
+                
+                {searchTerm && (
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <div className="flex items-center">
+                      <FaSearch className="text-blue-500 mr-3" />
+                      <span className="text-blue-700 font-medium">
+                        Searching for: "{searchTerm}"
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                    >
+                      Clear search
+                    </button>
+                  </div>
+                )}
+             </div>
+
+              {selectedCategory && (
                 <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-100">
                   <p className="text-sm text-orange-800 flex items-center">
                     <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -543,7 +597,7 @@ const Newgames = () => {
                     </span>
                   </p>
                 </div>
-              )} */}
+              )}
             </div>
 
             {/* Loading State */}
@@ -553,48 +607,60 @@ const Newgames = () => {
                   <FaSpinner className="animate-spin text-orange-500 text-5xl" />
                   <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-transparent blur-xl"></div>
                 </div>
-                <p className="mt-4 text-gray-600 font-medium">Loading games from provider...</p>
-                <p className="text-sm text-gray-500">This may take a moment</p>
+                <p className="mt-4 text-gray-600 font-medium">Loading new games from provider...</p>
+                <p className="text-sm text-gray-500">Filtering out games already in your database</p>
               </div>
             )}
 
             {/* Games Grid */}
-            {!loadingGames && games.length > 0 && (
+            {!loadingGames && filteredGames.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800">
-                    Found {games.length} {games.length === 1 ? 'game' : 'games'}
-                  </h3>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="flex items-center">
-                      <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
-                      <span className="text-gray-600">Saved to database</span>
-                    </span>
-                    <span className="flex items-center ml-4">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                      <span className="text-gray-600">New game</span>
-                    </span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {searchTerm ? 'Search Results' : 'Available Games'}
+                    </h3>
+                    <p className="text-gray-600 mt-1">
+                      {searchTerm ? (
+                        <>
+                          Found <span className="font-semibold text-orange-600">{filteredGames.length}</span> game{filteredGames.length === 1 ? '' : 's'} matching "{searchTerm}"
+                        </>
+                      ) : (
+                        <>
+                          Showing <span className="font-semibold text-orange-600">{filteredGames.length}</span> new {filteredGames.length === 1 ? 'game' : 'games'} from {selectedProviderName}
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                      >
+                        Clear Search
+                      </button>
+                    )}
+                    <div className="px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                      ✨ New Games Only
+                    </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {games.map((game) => (
+                  {filteredGames.map((game) => (
                     <div
                       key={game._id}
-                      className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl ${
-                        game.isSaved 
-                          ? 'border-green-400 hover:border-green-500' 
-                          : 'border-orange-300 hover:border-orange-400'
-                      }`}
+                      className="bg-white rounded-2xl shadow-lg overflow-hidden border-2 border-orange-300 hover:border-orange-400 transition-all duration-300 hover:shadow-xl"
                     >
                       {/* Game Header */}
-                      <div className={`p-4 ${game.isSaved ? 'bg-gradient-to-r from-green-50 to-white' : 'bg-gradient-to-r from-orange-50 to-white'}`}>
+                      <div className="p-4 bg-gradient-to-r from-orange-50 to-white">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="text-lg font-bold text-gray-900 truncate pr-2">
                             {game.name}
                           </h3>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${game.isSaved ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                            {game.isSaved ? 'Saved' : 'New'}
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                            New Game
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
@@ -613,7 +679,7 @@ const Newgames = () => {
                       <div className="p-4">
                         <div className="relative h-40 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden group">
                           <img
-                            src={game?.localLandscapePreview}
+                            src={game.coverImage || game.localPortraitPreview}
                             alt={game.name}
                             className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
                           />
@@ -644,7 +710,7 @@ const Newgames = () => {
                                 ))}
                             </div>
                           </div>
-                          {!game.isSaved && !game.localCategory && (
+                          {!game.localCategory && (
                             <p className="text-xs text-red-500 mt-2 flex items-center">
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -655,7 +721,7 @@ const Newgames = () => {
                         </div>
 
                         {/* Game Settings */}
-                        <div className="mt-4 ">
+                        <div className="mt-4">
                           <CustomCheckbox
                             id={`featured-${game._id}`}
                             checked={game.localFeatured}
@@ -681,98 +747,46 @@ const Newgames = () => {
 
                         {/* Image Upload Section */}
                         <div className="mt-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Portrait Image */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Portrait Image
-                              </label>
-                              {game.localPortraitPreview ? (
-                                <div className="relative group">
-                                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-                                    <img
-                                      src={game.localPortraitPreview}
-                                      alt="Portrait"
-                                      className="w-full h-full object-contain p-2"
-                                    />
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeImage(game._id, "portrait")}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <FaTimes className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <label className="block cursor-pointer">
-                                  <div className="h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:border-orange-400 hover:bg-orange-50 group">
-                                    <FaUpload className="text-gray-400 text-xl mb-2 group-hover:text-orange-500 transition-colors" />
-                                    <span className="text-sm font-medium text-gray-500 group-hover:text-orange-600 transition-colors">
-                                      Upload Portrait
-                                    </span>
-                                    <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</span>
-                                  </div>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(game._id, "portrait", e.target.files[0])}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Game Image
+                              <span className="text-xs text-gray-500 ml-2">(Will be used for both portrait and landscape)</span>
+                            </label>
+                            {game.localPortraitPreview ? (
+                              <div className="relative group">
+                                <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
+                                  <img
+                                    src={game.localPortraitPreview}
+                                    alt="Game Image"
+                                    className="w-full h-full object-contain p-2"
                                   />
-                                </label>
-                              )}
-                            </div>
-
-                            {/* Landscape Image */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Landscape Image
-                              </label>
-                              {game.localLandscapePreview ? (
-                                <div className="relative group">
-                                  <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-                                    <img
-                                      src={game.localLandscapePreview}
-                                      alt="Landscape"
-                                      className="w-full h-full object-contain p-2"
-                                    />
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeImage(game._id, "landscape")}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
-                                  >
-                                    <FaTimes className="w-3 h-3" />
-                                  </button>
                                 </div>
-                              ) : (
-                                <label className="block cursor-pointer">
-                                  <div className="h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:border-orange-400 hover:bg-orange-50 group">
-                                    <FaUpload className="text-gray-400 text-xl mb-2 group-hover:text-orange-500 transition-colors" />
-                                    <span className="text-sm font-medium text-gray-500 group-hover:text-orange-600 transition-colors">
-                                      Upload Landscape
-                                    </span>
-                                    <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</span>
-                                  </div>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(game._id, "landscape", e.target.files[0])}
-                                  />
-                                </label>
-                              )}
-                            </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(game._id)}
+                                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <FaTimes className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="block cursor-pointer">
+                                <div className="h-32 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:border-orange-400 hover:bg-orange-50 group">
+                                  <FaUpload className="text-gray-400 text-xl mb-2 group-hover:text-orange-500 transition-colors" />
+                                  <span className="text-sm font-medium text-gray-500 group-hover:text-orange-600 transition-colors">
+                                    Upload Game Image
+                                  </span>
+                                  <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</span>
+                                </div>
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={(e) => handleImageUpload(game._id, e.target.files[0])}
+                                />
+                              </label>
+                            )}
                           </div>
-                          
-                          {!game.isSaved && (!game.localPortraitImage || !game.localLandscapeImage) && (
-                            <p className="text-xs text-amber-600 mt-3 flex items-center">
-                              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                              Both images are required for new games
-                            </p>
-                          )}
                         </div>
 
                         {/* Save Button */}
@@ -780,21 +794,21 @@ const Newgames = () => {
                           <button
                             type="button"
                             onClick={() => handleSaveOrUpdateGame(game._id)}
-                            disabled={savingGameId === game._id || (!game.isSaved && !game.localCategory)}
-                            className={`w-full px-4 py-3 text-white cursor-pointer font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center ${
-                              game.isSaved
-                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-300 disabled:to-blue-400'
-                                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-orange-300 disabled:to-orange-400'
-                            } ${savingGameId === game._id ? 'opacity-80 cursor-wait' : ''}`}
+                            disabled={savingGameId === game._id || !game.localCategory || !game.localPortraitImage}
+                            className={`w-full px-4 py-3 text-white font-semibold rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center ${
+                              savingGameId === game._id 
+                                ? 'bg-gray-400 cursor-wait' 
+                                : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                            } ${!game.localCategory || !game.localPortraitImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
                             {savingGameId === game._id ? (
                               <>
                                 <FaSpinner className="animate-spin mr-2" />
-                                Processing...
+                                Saving...
                               </>
                             ) : (
                               <>
-                                {game.isSaved ? 'Update Game' : 'Save Game'}
+                                Save Game
                               </>
                             )}
                           </button>
@@ -806,20 +820,47 @@ const Newgames = () => {
               </div>
             )}
 
-            {/* Empty State */}
-            {!loadingGames && selectedProvider && games.length === 0 && (
+            {/* Search Results Empty State */}
+            {!loadingGames && selectedProvider && searchTerm && filteredGames.length === 0 && (
               <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-200">
                 <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                  <FaGamepad className="text-gray-400 text-3xl" />
+                  <FaSearch className="text-gray-400 text-3xl" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Games Found</h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  No games available for the selected provider. Try selecting a different provider or check if the provider has games available.
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Search Results</h3>
+                <p className="text-gray-600 max-w-md mx-auto mb-6">
+                  No games found matching "<span className="font-semibold">{searchTerm}</span>" in {selectedProviderName}.
                 </p>
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors duration-200"
+                >
+                  Clear Search
+                </button>
               </div>
             )}
 
-            {/* Initial State */}
+            {/* Empty State - No new games found */}
+            {!loadingGames && selectedProvider && !searchTerm && filteredGames.length === 0 && (
+              <div className="text-center py-16 bg-white rounded-2xl shadow-lg border border-gray-200">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center">
+                  <svg className="w-12 h-12 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">All Games Already Imported!</h3>
+                <p className="text-gray-600 max-w-md mx-auto mb-6">
+                  All games from <span className="font-semibold">{selectedProviderName}</span> are already in your database. Try selecting a different provider or check back later for new games.
+                </p>
+                <button
+                  onClick={() => setSelectedProvider("")}
+                  className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 transition-colors duration-200"
+                >
+                  Select Different Provider
+                </button>
+              </div>
+            )}
+
+            {/* Initial State - No provider selected */}
             {!loadingGames && !selectedProvider && (
               <div className="text-center py-20">
                 <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-orange-100 to-orange-50 rounded-full flex items-center justify-center">
@@ -827,17 +868,10 @@ const Newgames = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-3">Select a Provider</h3>
                 <p className="text-gray-600 max-w-md mx-auto mb-8">
-                  Choose a game provider from the filter above to start importing games to your platform.
+                  Choose a game provider from the filter above to see games that are not already in your database.
                 </p>
-                <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
-                  <span className="flex items-center">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    Games already in database
-                  </span>
-                  <span className="flex items-center">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                    New games ready to import
-                  </span>
+                <div className="inline-flex items-center px-4 py-2 bg-orange-100 text-orange-800 rounded-full font-medium">
+                  ⚡ Only shows new games not in your database
                 </div>
               </div>
             )}
