@@ -85,7 +85,7 @@ let brandingCache = null;
 const CategorySkeleton = ({ isMobile }) => {
   if (isMobile) {
     return (
-      <div className="block lg:hidden px-2 py-4 md:p-4 pt-[40px] relative">
+      <div className="block  lg:hidden px-2 py-4 md:p-4 pt-[40px] relative">
         <div className="flex gap-3 ">
           {Array.from({ length: 8 }).map((_, index) => (
             <div
@@ -120,8 +120,8 @@ const ContentSkeleton = ({ isExclusiveCategory }) => {
   if (isExclusiveCategory) {
     return (
       <div className="px-2 md:p-4">
-        <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
-          {Array.from({ length: 14 }).map((_, index) => (
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+          {Array.from({ length: 18 }).map((_, index) => (
             <div
               key={index}
               className="flex flex-col items-center bg-[#2A3254] rounded-[8px] p-[10px]"
@@ -279,7 +279,7 @@ const CategoryContent = () => {
   // Update displayed games when exclusive games change
   useEffect(() => {
     if (exclusiveGames.length > 0) {
-      const gamesPerPage = 20;
+      const gamesPerPage = calculateGamesPerPage();
       const initialGames = exclusiveGames.slice(0, gamesPerPage);
       setDisplayedGames(initialGames);
       setGamesPage(1);
@@ -289,7 +289,18 @@ const CategoryContent = () => {
       setHasMoreGames(false);
       setGamesPage(1);
     }
-  }, [exclusiveGames]);
+  }, [exclusiveGames, isMobile]);
+
+  // Calculate games per page based on screen size
+  const calculateGamesPerPage = () => {
+    if (isMobile) {
+      // Mobile: 2 columns × 4 rows = 8 games initially
+      return 9;
+    } else {
+      // Desktop: Start with 12 games (2-3 rows depending on columns)
+      return 14;
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -445,9 +456,9 @@ const CategoryContent = () => {
   };
 
   const handleShowMore = () => {
-    const gamesPerPage = 20;
     const nextPage = gamesPage + 1;
-    const nextGames = exclusiveGames.slice(0, gamesPerPage * nextPage);
+    const gamesPerLoad = calculateGamesPerPage();
+    const nextGames = exclusiveGames.slice(0, gamesPerLoad * nextPage);
     setDisplayedGames(nextGames);
     setGamesPage(nextPage);
     setHasMoreGames(exclusiveGames.length > nextGames.length);
@@ -517,11 +528,11 @@ const CategoryContent = () => {
       // Render exclusive games in a responsive grid with portrait images
       return (
         <div className="px-2 md:p-4">
-          <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
             {displayedGames.map((game) => (
               <div
                 key={game._id || game.gameId}
-                className="flex flex-col items-center  rounded-[8px] overflow-hidden transition-all cursor-pointer hover:border-theme_color hover:shadow-lg  group"
+                className="flex flex-col items-center rounded-[8px] overflow-hidden transition-all cursor-pointer hover:border-theme_color hover:shadow-lg group"
                 onClick={() => handleGameClick(game)}
               >
                 {/* Game Image Container with fixed aspect ratio */}
@@ -540,14 +551,21 @@ const CategoryContent = () => {
           </div>
 
           {/* More Button - Only show if there are more games to load */}
-          {hasMoreGames && (
-            <div className="flex justify-center mt-6 mb-4">
+          {hasMoreGames && displayedGames.length > 0 && (
+            <div className="flex justify-center mt-8 mb-4">
               <button
                 className="px-8 py-3 bg-theme_color hover:bg-theme_color/90 text-white text-sm font-medium rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-theme_color/30"
                 onClick={handleShowMore}
               >
                 More Games
               </button>
+            </div>
+          )}
+
+          {/* Show message if no games found */}
+          {displayedGames.length === 0 && exclusiveGames.length === 0 && !contentLoading && (
+            <div className="text-center py-8 text-gray-400">
+              No exclusive games found.
             </div>
           )}
         </div>

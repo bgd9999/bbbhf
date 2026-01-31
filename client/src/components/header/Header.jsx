@@ -11,6 +11,10 @@ import {
   FaBook,
   FaComments,
   FaMobileAlt,
+  FaFacebook,
+  FaEnvelope,
+  FaWhatsapp,
+  FaTelegram,
 } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { MdSupportAgent } from "react-icons/md";
@@ -36,7 +40,6 @@ import play_img from "../../assets/play.png";
 import profile_img from "../../assets/profile.png";
 import menu_img from "../../assets/icon-menu.png";
 import toast, { Toaster } from "react-hot-toast";
-import { FaWhatsapp, FaTelegram } from "react-icons/fa";
 
 const APK_FILE = "https://http://localhost:4500.live/onexwin.apk";
 
@@ -65,6 +68,10 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
   const [showMobileAppBanner, setShowMobileAppBanner] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+  
+  // Social links states
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [loadingSocialLinks, setLoadingSocialLinks] = useState(false);
   
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -119,6 +126,28 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     }
   ];
 
+  // Default social links fallback
+  const getDefaultSocialLinks = () => [
+    {
+      platform: "whatsapp",
+      url: "https://wa.me/+4407386588951",
+      title: "WhatsApp",
+      icon: <FaWhatsapp className="w-4 h-4 mr-2" />
+    },
+    {
+      platform: "email",
+      url: "mailto:support@yourdomain.com",
+      title: "Email",
+      icon: <FaEnvelope className="w-4 h-4 mr-2" />
+    },
+    {
+      platform: "facebook",
+      url: "https://facebook.com/yourpage",
+      title: "Facebook",
+      icon: <FaFacebook className="w-4 h-4 mr-2" />
+    }
+  ];
+
   // Check if device is mobile
   const isMobileDevice = () => {
     return window.innerWidth < 768;
@@ -165,6 +194,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     if (!promotions.length) fetchPromotions();
     checkAuthStatus();
     fetchBrandingData();
+    fetchSocialLinks(); // Fetch social links
     
     const hasShownSignupPopup = localStorage.getItem("hasShownSignupPopup");
     if (isLoggedIn && !hasShownSignupPopup) {
@@ -212,12 +242,61 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     }
   };
 
+  const fetchSocialLinks = async () => {
+    try {
+      setLoadingSocialLinks(true);
+      const response = await axios.get(`${API_BASE_URL}/api/social-links`);
+      if (response.data.success && response.data.data) {
+        // Map API response to standardized format
+        const mappedLinks = response.data.data.map(link => {
+          let icon;
+          let title;
+          
+          switch(link.platform.toLowerCase()) {
+            case 'whatsapp':
+              icon = <FaWhatsapp className="w-4 h-4 mr-2" />;
+              title = "WhatsApp";
+              break;
+            case 'email':
+              icon = <FaEnvelope className="w-4 h-4 mr-2" />;
+              title = "Email";
+              break;
+            case 'facebook':
+              icon = <FaFacebook className="w-4 h-4 mr-2" />;
+              title = "Facebook";
+              break;
+            default:
+              icon = <FaWhatsapp className="w-4 h-4 mr-2" />;
+              title = link.platform;
+          }
+          
+          return {
+            ...link,
+            icon,
+            title
+          };
+        });
+        
+        setSocialLinks(mappedLinks);
+      } else {
+        console.error("Failed to fetch social links");
+        // Fallback to default social links if API fails
+        setSocialLinks(getDefaultSocialLinks());
+      }
+    } catch (error) {
+      console.error("Error fetching social links:", error);
+      // Fallback to default social links if API fails
+      setSocialLinks(getDefaultSocialLinks());
+    } finally {
+      setLoadingSocialLinks(false);
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       setIsLoadingCategories(true);
       const response = await axios.get(`${API_BASE_URL}/api/categories`);
       if (response.data && response.data.data) {
-    
         // Update with API data
         setCategories(response.data.data);
         localStorage.setItem("categories", JSON.stringify(response.data.data));
@@ -495,7 +574,31 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
 
   const bottomMenuItems = [
     {
-      title: "Download App",
+      title: "VIP Club",
+      icon: <FaCrown className="w-5 h-5 min-w-[20px]" />,
+      subItems: [],
+      path: "/vip-club"
+    },
+    {
+      title: "Referral program",
+      icon: <FaUserFriends className="w-5 h-5 min-w-[20px]" />,
+      subItems: [],
+      path: "/referral-program"
+    },
+    {
+      title: "Affiliate",
+      icon: <FaHandshake className="w-5 h-5 min-w-[20px]" />,
+      subItems: [],
+            onClick: () =>{window.location.href="https://m-affiliate.bajiman.com"},
+    },
+    {
+      title: "Brand Ambassadors",
+      icon: <MdSupportAgent className="w-5 h-5 min-w-[20px]" />,
+      subItems: [],
+      path: "/coming-soon?title=Brand Ambassadors"
+    },
+    {
+      title: "APP Download",
       icon: <FaMobileAlt className="w-5 h-5 min-w-[20px]" />,
       subItems: [],
       onClick: () => downloadFileAtURL(APK_FILE),
@@ -503,17 +606,20 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     {
       title: "Contact Us",
       icon: <FaPhone className="w-5 h-5 min-w-[20px]" />,
-      subItems: ["Whatsapp", "Email", "Facebook"],
+      subItems: [], // We'll handle contact items separately
+      isContact: true // Flag to identify contact us item
     },
     {
       title: "New Member Guide",
       icon: <FaBook className="w-5 h-5 min-w-[20px]" />,
       subItems: [],
+      path: "/coming-soon?title=New Member Guide"
     },
     {
       title: "BJ Forum",
       icon: <FaComments className="w-5 h-5 min-w-[20px]" />,
       subItems: [],
+      path: "/coming-soon?title=BJ Forum"
     },
   ];
 
@@ -544,32 +650,11 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     toast.success("APK Download Started!");
   };
 
-  const [whatsappLink, setWhatsappLink] = useState("https://wa.me/+4407386588951"); // fallback
-  const [socialLinksLoading, setSocialLinksLoading] = useState(true);
-
-  const fetchSocialLinks = async () => {
-    try {
-      setSocialLinksLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/social-links`);
-      if (response.data.success && response.data.data) {
-        const whatsapp = response.data.data.find(
-          (link) => link.platform.toLowerCase() === "whatsapp"
-        );
-        if (whatsapp && whatsapp.url && whatsapp.url.includes("wa.me")) {
-          setWhatsappLink(whatsapp.url);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching social links for WhatsApp:", error);
-      // Keep fallback
-    } finally {
-      setSocialLinksLoading(false);
+  const handleContactClick = (url) => {
+    if (url) {
+      window.open(url, '_blank');
     }
   };
-
-  useEffect(() => {
-    fetchSocialLinks();
-  }, []);
 
   return (
     <>
@@ -777,7 +862,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
         >
           <div className="w-full flex justify-start items-center px-4 pt-4 pb-3 md:sticky top-0 left-0 bg-[#1A1A1A]">
             <a
-              href={whatsappLink}
+              href="https://wa.me/+4407386588951"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full"
@@ -909,12 +994,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
             
           </div>
-      <div>
-        <NavLink target="_blank" to="https://m-affiliate.bajiman.com" className="px-4">
-          Affiliate
-        </NavLink>
-      </div>
-       
 
           <div className="border-t border-[#222424] my-4 mx-2"></div>
           <div className="space-y-1 px-2">
@@ -922,23 +1001,181 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
               <div key={index}>
                 <div
                   className={`flex items-center p-3 rounded text-gray-500 cursor-pointer hover:text-gray-600 transition-colors duration-200 ${
-                    activeMenu === item.title ? "" : ""
+                    activeMenu === item.title ? "bg-[#222]" : ""
                   }`}
-                  onClick={() => item.onClick ? item.onClick() : toggleMenu(item.title)}
+                  onClick={() => {
+                    if (item.isContact) {
+                      toggleMenu(item.title);
+                    } else if (item.onClick) {
+                      item.onClick();
+                    } else if (item.path) {
+                      navigate(item.path);
+                      setSidebarOpen(false);
+                    } else {
+                      toggleMenu(item.title);
+                    }
+                  }}
                 >
                   {item.icon}
                   <div className="flex items-center ml-3 w-full">
                     <span className="text-sm flex-grow whitespace-nowrap">
                       {item.title}
                     </span>
-                    {item.subItems.length > 0 &&
-                      (activeMenu === item.title ? (
-                        <FaChevronDown className="text-xs transition-transform duration-200" />
+                    
+                    <div className="flex items-center">
+                      {/* Always show chevron for all menu items */}
+                      {item.isContact && activeMenu === item.title ? (
+                        <FaChevronDown className="text-xs text-gray-400 transition-transform duration-200" />
                       ) : (
-                        <FaChevronRight className="text-xs transition-transform duration-200" />
-                      ))}
+                        <FaChevronRight className="text-xs text-gray-400 transition-transform duration-200" />
+                      )}
+                    </div>
                   </div>
                 </div>
+                
+                {/* Contact Us Submenu */}
+       {item.isContact && activeMenu === item.title && (
+  <div className="pl-3 mb-2 space-y-2 animate-fadeIn">
+    {loadingSocialLinks ? (
+      <div className="p-2 text-center">
+        <div className="text-xs text-gray-400">Loading contact options...</div>
+      </div>
+    ) : socialLinks.length > 0 ? (
+      <div className="grid grid-cols-2 gap-3 p-2">
+        {socialLinks.map((contact, contactIndex) => {
+          let bgColor = "";
+          let iconColor = "";
+          let textColor = "";
+          
+          // Set different colors based on platform
+          switch(contact.platform.toLowerCase()) {
+            case 'whatsapp':
+              bgColor = "bg-gradient-to-r from-green-900/20 to-green-700/10";
+              iconColor = "text-green-400";
+              textColor = "text-green-300";
+              break;
+            case 'email':
+              bgColor = "bg-gradient-to-r from-blue-900/20 to-blue-700/10";
+              iconColor = "text-blue-400";
+              textColor = "text-blue-300";
+              break;
+            case 'facebook':
+              bgColor = "bg-gradient-to-r from-indigo-900/20 to-indigo-700/10";
+              iconColor = "text-indigo-400";
+              textColor = "text-indigo-300";
+              break;
+            case 'instagram':
+              bgColor = "bg-gradient-to-r from-pink-900/20 to-purple-700/10";
+              iconColor = "text-pink-400";
+              textColor = "text-pink-300";
+              break;
+            case 'telegram':
+              bgColor = "bg-gradient-to-r from-sky-900/20 to-sky-700/10";
+              iconColor = "text-sky-400";
+              textColor = "text-sky-300";
+              break;
+            case 'twitter':
+            case 'x':
+              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
+              iconColor = "text-gray-400";
+              textColor = "text-gray-300";
+              break;
+            default:
+              bgColor = "bg-gradient-to-r from-gray-900/20 to-gray-700/10";
+              iconColor = "text-gray-400";
+              textColor = "text-gray-300";
+          }
+          
+          return (
+            <div
+              key={contactIndex}
+              className={`flex   p-3 rounded-lg cursor-pointer  hover:scale-105 transition-all duration-200 hover:shadow-lg`}
+              onClick={() => handleContactClick(contact.url)}
+            >
+              <div className="mb-2">
+                <span className={`text-2xl ${iconColor}`}>
+                  {contact.icon}
+                </span>
+              </div>
+              <span className={`text-xs font-medium ${textColor}`}>
+                {contact.title}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      // Fallback if no social links - Colorful design
+      <div className="grid grid-cols-2 gap-3 p-2">
+        {/* WhatsApp */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-green-900/20 to-green-700/10 border border-green-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("https://wa.me/+4407386588951", "_blank")}
+        >
+          <div className="mb-2">
+            <FaWhatsapp className="text-2xl text-green-400" />
+          </div>
+          <span className="text-xs font-medium text-green-300">WhatsApp</span>
+        </div>
+        
+        {/* Email */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-blue-900/20 to-blue-700/10 border border-blue-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("mailto:support@yourdomain.com", "_blank")}
+        >
+          <div className="mb-2">
+            <FaEnvelope className="text-2xl text-blue-400" />
+          </div>
+          <span className="text-xs font-medium text-blue-300">Email</span>
+        </div>
+        
+        {/* Facebook */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-indigo-900/20 to-indigo-700/10 border border-indigo-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("https://facebook.com", "_blank")}
+        >
+          <div className="mb-2">
+            <FaFacebook className="text-2xl text-indigo-400" />
+          </div>
+          <span className="text-xs font-medium text-indigo-300">Facebook</span>
+        </div>
+        
+        {/* Instagram (Added based on your image) */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-pink-900/20 to-purple-700/10 border border-pink-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("https://instagram.com", "_blank")}
+        >
+          <div className="mb-2">
+            <FaInstagram className="text-2xl text-pink-400" />
+          </div>
+          <span className="text-xs font-medium text-pink-300">Instagram</span>
+        </div>
+        
+        {/* Telegram */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-sky-900/20 to-sky-700/10 border border-sky-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("https://t.me/bajiman", "_blank")}
+        >
+          <div className="mb-2">
+            <FaTelegram className="text-2xl text-sky-400" />
+          </div>
+          <span className="text-xs font-medium text-sky-300">Telegram</span>
+        </div>
+        
+        {/* Twitter/X */}
+        <div
+          className="flex flex-col items-center p-3 rounded-lg cursor-pointer bg-gradient-to-r from-gray-900/20 to-gray-700/10 border border-gray-700/30 hover:scale-105 transition-all duration-200 hover:shadow-lg"
+          onClick={() => window.open("https://twitter.com", "_blank")}
+        >
+          <div className="mb-2">
+            <FaTwitter className="text-2xl text-gray-400" />
+          </div>
+          <span className="text-xs font-medium text-gray-300">Twitter</span>
+        </div>
+      </div>
+    )}
+  </div>
+)}
               </div>
             ))}
           </div>
@@ -972,7 +1209,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
                 className="bg-theme_color cursor-pointer hover:bg-theme_color/90 text-white text-xs font-medium py-2 px-3 rounded transition-colors"
               >
                 Download
-              </button>
+              </button> 
               <button
                 onClick={handleCloseBanner}
                 className="text-gray-400 cursor-pointer hover:text-white p-1 transition-colors"
@@ -1048,33 +1285,32 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
       </div>
 
-      {/* WhatsApp Floating Button */}
-{/* WhatsApp & Telegram Floating Buttons - Vertical Stack */}
-<div className="fixed bottom-25 md:bottom-20 right-4 z-[1000] flex flex-col gap-4">
-  {/* Telegram Button - Top */}
-  <a
-    href="https://t.me/bajiman"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="border-[1px] border-gray-200 bg-blue-500 p-4 rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 animate-bounce hover:animate-pulse"
-    aria-label="Join Telegram Channel"
-    style={{ animationDelay: '0.1s' }}
-  >
-    <FaTelegram className="text-white text-2xl" />
-  </a>
-  
-  {/* WhatsApp Button - Bottom */}
-  <a
-    href={whatsappLink}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="border-[1px] border-gray-200 bg-green-500 p-4 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 animate-bounce hover:animate-pulse"
-    aria-label="Contact Support on WhatsApp"
-    style={{ animationDelay: '0.2s' }}
-  >
-    <FaWhatsapp className="text-white text-2xl" />
-  </a>
-</div>
+      {/* WhatsApp & Telegram Floating Buttons - Vertical Stack */}
+      <div className="fixed bottom-25 md:bottom-20 right-4 z-[1000] flex flex-col gap-4">
+        {/* Telegram Button - Top */}
+        <a
+          href="https://t.me/bajiman"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border-[1px] border-gray-200 bg-blue-500 p-4 rounded-full shadow-lg hover:bg-blue-600 transition-all duration-300 animate-bounce hover:animate-pulse"
+          aria-label="Join Telegram Channel"
+          style={{ animationDelay: '0.1s' }}
+        >
+          <FaTelegram className="text-white text-2xl" />
+        </a>
+        
+        {/* WhatsApp Button - Bottom */}
+        <a
+          href="https://wa.me/+4407386588951"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="border-[1px] border-gray-200 bg-green-500 p-4 rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 animate-bounce hover:animate-pulse"
+          aria-label="Contact Support on WhatsApp"
+          style={{ animationDelay: '0.2s' }}
+        >
+          <FaWhatsapp className="text-white text-2xl" />
+        </a>
+      </div>
 
       {/* Signup Success Popup */}
       {showSignupPopup && (

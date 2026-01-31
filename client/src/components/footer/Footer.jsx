@@ -22,6 +22,7 @@ import { IoOpenOutline } from "react-icons/io5";
 import axios from "axios";
 import logo from "../../assets/logo.png";
 import OBP from "../../assets/OBP.png";
+import { NavLink } from "react-router-dom";
 
 const Footer = () => {
   const [openSection, setOpenSection] = useState(null);
@@ -433,60 +434,60 @@ const Footer = () => {
             <h3 className="font-medium mb-4 text-gray-200">Gaming</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/casino"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Casino
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Slots
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+            <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Table
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                 <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Fishing
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+              <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Crash
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+            <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Arcade
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+           <NavLink
+                  to="/slots"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Lottery
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -496,49 +497,49 @@ const Footer = () => {
             <h3 className="font-medium mb-4 text-gray-200">About Boji</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/about-us"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   About Us{" "}
                   <span className="inline-block text-gray-500 text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+               <NavLink
+                  to="/privacy-policy"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   Privacy Policy{" "}
                   <span className="inline-block text-gray-500 text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/terms-and-conditions"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   Terms & Conditions{" "}
                   <span className="inline-block text-gray-500 text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/responsible-gaming"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   Responsible Gaming{" "}
                   <span className="inline-block text-gray-500 text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/kyc"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   KYC
                   <span className="inline-block text-gray-500 text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -556,36 +557,28 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/vip-club"
                   className="hover:text-white transition-colors duration-200"
                 >
                   VIP Club
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/referral-program"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Referral
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/coming-soon?title=Brand Ambassadors"
                   className="hover:text-white transition-colors duration-200"
                 >
                   Brand Ambassadors
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="hover:text-white transition-colors duration-200"
-                >
-                  APP Download
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -595,13 +588,13 @@ const Footer = () => {
             <h3 className="font-medium mb-4 text-white">Help</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/coming-soon?title=BJ Forum"
                   className="hover:text-white transition-colors duration-200 flex justify-start items-center gap-[2px]"
                 >
                   BJ Forum
                   <span className="inline-block text-gray-500 text-xs ml-[2px] text-[20px]">      <IoOpenOutline/></span>
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>

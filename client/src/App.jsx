@@ -21,6 +21,14 @@ import Promotions from "./pages/promotions/Promotions";
 import Mprofile from "./pages/profile/Mprofile";
 import GamePage from "./pages/games/GamePage";
 import Allgames from "./pages/allgames/Allgames";
+import ComingSoon from "./pages/commingsoon/Comingsoon";
+import Vipclub from "./pages/vipclub/Vipclub";
+import Referprogramme from "./pages/referprogramme/Referprogramme";
+import Aboutus from "./pages/termsandpolicy/Aboutus";
+import Privacypolicy from "./pages/termsandpolicy/Privacypolicy";
+import Termsandcondition from "./pages/termsandpolicy/Termsandcondition";
+import Responsiblegaming from "./pages/termsandpolicy/Responsiblegaming";
+import KycPolicy from "./pages/termsandpolicy/KycPolicy";
 
 const AuthContext = createContext();
 
@@ -198,6 +206,70 @@ const App = () => {
               element={
                 <PublicRoute>
                   <Home />
+                </PublicRoute>
+              }
+            />
+                     <Route
+              path="/coming-soon"
+              element={
+                <PublicRoute>
+                  <ComingSoon />
+                </PublicRoute>
+              }
+            />
+                         <Route
+              path="/vip-club"
+              element={
+                <PublicRoute>
+                  <Vipclub />
+                </PublicRoute>
+              }
+            />
+                              <Route
+              path="/referral-program"
+              element={
+                <PublicRoute>
+                  <Referprogramme />
+                </PublicRoute>
+              }
+            />
+                                 <Route
+              path="/about-us"
+              element={
+                <PublicRoute>
+                  <Aboutus />
+                </PublicRoute>
+              }
+            />
+                                         <Route
+              path="/privacy-policy"
+              element={
+                <PublicRoute>
+                  <Privacypolicy />
+                </PublicRoute>
+              }
+            />
+                                              <Route
+              path="/terms-and-conditions"
+              element={
+                <PublicRoute>
+                  <Termsandcondition />
+                </PublicRoute>
+              }
+            />
+                                                    <Route
+              path="/responsible-gaming"
+              element={
+                <PublicRoute>
+                  <Responsiblegaming />
+                </PublicRoute>
+              }
+            />
+                                                            <Route
+              path="/kyc"
+              element={
+                <PublicRoute>
+                  <KycPolicy />
                 </PublicRoute>
               }
             />
