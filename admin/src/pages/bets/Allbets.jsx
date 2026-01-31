@@ -36,6 +36,7 @@ const Allbets = () => {
       
       if (response.data.success) {
         const transformedBets = response.data.data.map((bet, index) => ({
+          game_name:bet.game_name,
           id: bet._id?.$oid || `bet-${index}`,
           betId: bet.serial_number || `BT${String(index + 1).padStart(6, '0')}`,
           username: bet.original_username || bet.member_account,

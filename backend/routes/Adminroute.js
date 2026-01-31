@@ -8473,7 +8473,7 @@ Adminrouter.delete("/affiliate-payouts", async (req, res) => {
 // ---------------admin-route--------------------------
 Adminrouter.get("/betting-history",async(req,res)=>{
   try {
-    const bettinghistory=await BettingHistory.find();
+    const bettinghistory=await BettingHistory.find().sort({createdAt:-1});
     if(!bettinghistory){
     return res.send({success:false,message:"no data found!"})
     }
