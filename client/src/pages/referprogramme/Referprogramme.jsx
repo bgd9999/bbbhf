@@ -136,9 +136,12 @@ const Referprogramme = () => {
         }}
       />
 
+        {/* Header */}
       <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <div className="flex">
+      {/* Main Layout */}
+      <div className="flex h-[calc(100vh-56px)]">
+        <Sidebar sidebarOpen={sidebarOpen} />
 
         <div className="flex-1 h-[calc(100vh-56px)] overflow-y-auto custom-scrollbar pb-20 relative">
           
@@ -151,7 +154,7 @@ const Referprogramme = () => {
             />
           </div>
 
-          <div className="max-w-6xl mx-auto p-4 space-y-6 mt-4">
+          <div className="max-w-6xl mx-auto p-4 pl-[50px] space-y-6 mt-4">
             
             {/* 2. PROGRAM INFO SECTION */}
             <div className="bg-[#1a1a1a] rounded-lg p-6 border border-gray-800">
