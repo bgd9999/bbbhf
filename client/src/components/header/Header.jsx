@@ -907,59 +907,14 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
                 View all
               </NavLink>
             </div>
+            
           </div>
-
-          <div className="space-y-1 px-2">
-            {secondaryMenuItems.map((item, index) => (
-              <div key={index}>
-                <div
-                  className={`flex items-center p-3 rounded text-gray-500 cursor-pointer hover:text-gray-600 transition-colors duration-200 ${
-                    activeMenu === item.title ? "" : ""
-                  }`}
-                  onClick={() => toggleMenu(item.title)}
-                >
-                  {item.icon}
-                  <div className="flex items-center ml-3 w-full">
-                    <span className="text-sm flex-grow whitespace-nowrap">
-                      {item.title}
-                    </span>
-                    {item.title !== "Promotions" &&
-                      item.subItems.length > 0 &&
-                      (activeMenu === item.title ? (
-                        <FaChevronDown className="text-xs transition-transform duration-200" />
-                      ) : (
-                        <FaChevronRight className="text-xs transition-transform duration-200" />
-                      ))}
-                  </div>
-                </div>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    activeMenu === item.title &&
-                    item.title !== "Promotions" &&
-                    item.subItems.length > 0
-                      ? "max-h-96"
-                      : "max-h-0"
-                  }`}
-                >
-                  {activeMenu === item.title && item.title !== "Promotions" && (
-                    <div className="ml-8 mt-1 mb-2 space-y-1">
-                      {item.subItems.map((subItem, subIndex) => (
-                        <div
-                          key={subIndex}
-                          className={`p-2 text-xs rounded cursor-pointer hover:bg-[#333] transition-colors duration-200 ${
-                            activeSubMenu === subItem ? "bg-[#333]" : ""
-                          }`}
-                          onClick={() => toggleSubMenu(subItem)}
-                        >
-                          {subItem}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+      <div>
+        <NavLink target="_blank" to="https://m-affiliate.bajiman.com" className="px-4">
+          Affiliate
+        </NavLink>
+      </div>
+       
 
           <div className="border-t border-[#222424] my-4 mx-2"></div>
           <div className="space-y-1 px-2">
