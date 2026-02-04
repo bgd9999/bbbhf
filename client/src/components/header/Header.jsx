@@ -44,7 +44,7 @@ import menu_img from "../../assets/icon-menu.png";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../../App";
 
-const APK_FILE = "https://http://localhost:4500.live/onexwin.apk";
+const APK_FILE = "https://bajiman.com/Bajiman.apk";
 
 export const Header = ({ sidebarOpen, setSidebarOpen }) => {
   const API_BASE_URL = import.meta.env.VITE_API_KEY_Base_URL;
@@ -506,15 +506,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     setProfileDropdownOpen(false);
     navigate("/");
   };
-
-  const handleDownloadClick = () => {
-    const hideUntil = Date.now() + (30 * 24 * 60 * 60 * 1000);
-    localStorage.setItem("mobileAppDownloadHiddenUntil", hideUntil.toString());
-    setShowMobileAppBanner(false);
-    window.open("https://your-app-download-link.com", "_blank");
-    toast.success("Redirecting to app download...");
-  };
-
   const handleCloseBanner = () => {
     const hideUntil = Date.now() + (10 * 60 * 1000);
     localStorage.setItem("mobileAppBannerHiddenUntil", hideUntil.toString());
@@ -661,7 +652,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
   const toggleSubMenu = (subItem) => {
     setActiveSubMenu(activeSubMenu === subItem ? null : subItem);
   };
-
   const downloadFileAtURL = (url) => {
     const fileName = url.split("/").pop();
     const aTag = document.createElement("a");
@@ -672,7 +662,6 @@ export const Header = ({ sidebarOpen, setSidebarOpen }) => {
     aTag.remove();
     toast.success("APK Download Started!");
   };
-
   const handleContactClick = (url) => {
     if (url) {
       window.open(url, '_blank');
